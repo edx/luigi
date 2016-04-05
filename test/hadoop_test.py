@@ -280,8 +280,7 @@ class CreatePackagesArchive(unittest.TestCase):
         add.assert_any_call('test/create_packages_archive_root/package/submodule_without_imports.py', 'package/submodule_without_imports.py')
         add.assert_any_call('test/create_packages_archive_root/package/subpackage/__init__.py', 'package/subpackage/__init__.py')
         add.assert_any_call('test/create_packages_archive_root/package/subpackage/submodule.py', 'package/subpackage/submodule.py')
-        add.assert_any_call('test/create_packages_archive_root/package.egg-info/top_level.txt', 'package.egg-info/top_level.txt')
-        assert add.call_count == 7
+        assert add.call_count == 6
 
     def _assert_package_subpackage(self, add):
         add.assert_any_call('test/create_packages_archive_root/package/__init__.py', 'package/__init__.py')

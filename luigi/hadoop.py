@@ -35,10 +35,12 @@ import warnings
 import mrrunner
 import json
 import glob
+import pkg_resources
 
 logger = logging.getLogger('luigi-interface')
 
 _attached_packages = []
+_file_path_to_egg_info_path = {}
 
 
 def attach(*packages):
@@ -78,13 +80,42 @@ def get_extra_files(extra_files):
     return result
 
 
+def get_egg_info_paths():
+    if len(_file_path_to_egg_info_path) > 0:
+        return _file_path_to_egg_info_path
+
+    for package in pkg_resources.working_set:
+        egg_info_path = os.path.join(package.location, package.egg_name() + '.egg-info')
+        installed_files_file_name = os.path.join(egg_info_path, 'installed-files.txt')
+        if not os.path.exists(installed_files_file_name):
+            continue
+
+        with open(installed_files_file_name, 'r') as installed_files_file:
+            for relative_path in installed_files_file:
+                absolute_path = os.path.join(egg_info_path, relative_path.strip())
+                normalized_file_path = os.path.realpath(absolute_path)
+                _file_path_to_egg_info_path[normalized_file_path] = egg_info_path
+
+    return _file_path_to_egg_info_path
+
+
 def create_packages_archive(packages, filename):
     """Create a tar archive which will contain the files for the packages listed in packages. """
     import tarfile
     tar = tarfile.open(filename, "w")
 
+    egg_info_paths = get_egg_info_paths()
+    egg_info_to_add = set()
+
     def add(src, dst):
         logger.debug('adding to tar: %s -> %s', src, dst)
+
+        # Ensure any entry points and other egg-info metadata is also transmitted along with
+        # this file. If it is associated with any egg-info directories, ship them too.
+        egg_info_path = egg_info_paths.get(os.path.realpath(src))
+        if egg_info_path:
+            egg_info_to_add.add(egg_info_path)
+
         tar.add(src, dst)
 
     def add_files_for_package(sub_package_path, root_package_path, root_package_name):
@@ -129,15 +160,6 @@ def create_packages_archive(packages, filename):
 
                 add_files_for_package(p, p, n)
 
-                # include egg-info directories that are parallel:
-                for egg_info_path in glob.glob(p + '*.egg-info'):
-                    logger.debug(
-                        'Adding package metadata to archive for "%s" found at "%s"',
-                        package.__name__,
-                        egg_info_path
-                    )
-                    add_files_for_package(egg_info_path, p, n)
-
         else:
             f = package.__file__
             if f.endswith("pyc"):
@@ -146,6 +168,16 @@ def create_packages_archive(packages, filename):
                 add(dereference(f), os.path.basename(f))
             else:
                 add(dereference(f), n + ".py")
+
+    # Add any egg-info directories that are needed by the modules
+    # and packages that are included in this tarball.
+    for egg_info_root_path in egg_info_to_add:
+        logger.debug(
+            'Adding package metadata to archive found at "%s"',
+            egg_info_root_path
+        )
+        add(egg_info_root_path, os.path.basename(egg_info_root_path))
+
     tar.close()
 
 
