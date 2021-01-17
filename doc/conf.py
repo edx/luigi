@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Luigi documentation build configuration file, created by
 # sphinx-quickstart on Sat Feb  8 00:56:43 2014.
@@ -32,7 +31,7 @@ try:
         significance = 'Insignificant ' if not self.significant else ''
         class_name = self.__class__.__name__
         has_default = self._default != luigi.parameter._no_value
-        default = ' (defaults to {})'.format(self._default) if has_default else ''
+        default = f' (defaults to {self._default})' if has_default else ''
         description = (': ' + self.description if self.description else '')
         return significance + class_name + default + description
 
@@ -107,9 +106,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Luigi'
-authors = u"The Luigi Authors"
-copyright = u"2011-{}, {}".format(datetime.datetime.now().year, authors)
+project = 'Luigi'
+authors = "The Luigi Authors"
+copyright = f"2011-{datetime.datetime.now().year}, {authors}"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -277,7 +276,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    ('index', 'Luigi.tex', u'Luigi Documentation',
+    ('index', 'Luigi.tex', 'Luigi Documentation',
      authors, 'manual'),
 ]
 
@@ -307,7 +306,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'luigi', u'Luigi Documentation',
+    ('index', 'luigi', 'Luigi Documentation',
      [authors], 1)
 ]
 
@@ -321,7 +320,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'Luigi', u'Luigi Documentation',
+    ('index', 'Luigi', 'Luigi Documentation',
      authors, 'Luigi', 'One line description of project.',
      'Miscellaneous'),
 ]

@@ -1,0 +1,10 @@
+# Requirements for test runs
+-c constraints.txt
+
+sqlalchemy
+boto3
+Sphinx
+sphinx_rtd_theme
+enum34
+azure-storage-blob
+prometheus-client

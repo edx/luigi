@@ -1,0 +1,7 @@
+# Core requirements for using this package template
+-c constraints.txt
+
+python-dateutil
+python-daemon
+tornado
+enum34

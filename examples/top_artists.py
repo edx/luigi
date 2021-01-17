@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -19,12 +18,10 @@ import random
 from collections import defaultdict
 from heapq import nlargest
 
-from luigi import six
-
 import luigi
-import luigi.contrib.hadoop
 import luigi.contrib.hdfs
 import luigi.contrib.postgres
+import luigi.contrib.spark
 
 
 class ExternalStreams(luigi.ExternalTask):
@@ -110,7 +107,7 @@ class AggregateArtists(luigi.Task):
         :return: the target output for this task.
         :rtype: object (:py:class:`luigi.target.Target`)
         """
-        return luigi.LocalTarget("data/artist_streams_{}.tsv".format(self.date_interval))
+        return luigi.LocalTarget(f"data/artist_streams_{self.date_interval}.tsv")
 
     def requires(self):
         """
@@ -132,20 +129,31 @@ class AggregateArtists(luigi.Task):
                     artist_count[artist] += 1
 
         with self.output().open('w') as out_file:
-            for artist, count in six.iteritems(artist_count):
-                out_file.write('{}\t{}\n'.format(artist, count))
+            for artist, count in artist_count.items():
+                out_file.write(f'{artist}\t{count}\n')
 
 
-class AggregateArtistsHadoop(luigi.contrib.hadoop.JobTask):
+class AggregateArtistsSpark(luigi.contrib.spark.SparkSubmitTask):
     """
-    This task runs a :py:class:`luigi.contrib.hadoop.JobTask` task
+    This task runs a :py:class:`luigi.contrib.spark.SparkSubmitTask` task
     over each target data returned by :py:meth:`~/.StreamsHdfs.output` and
-    writes the result into its :py:meth:`~.AggregateArtistsHadoop.output` target (a file in HDFS).
-
-    This class uses :py:meth:`luigi.contrib.spark.SparkJob.run`.
+    writes the result into its :py:meth:`~.AggregateArtistsSpark.output` target (a file in HDFS).
     """
 
     date_interval = luigi.DateIntervalParameter()
+
+    """
+    The Pyspark script to run.
+
+    For Spark applications written in Java or Scala, the name of a jar file should be supplied instead.
+    """
+    app = 'top_artists_spark.py'
+
+    """
+    Address of the Spark cluster master. In this case, we are not using a cluster, but running
+    Spark in local mode.
+    """
+    master = 'local[*]'
 
     def output(self):
         """
@@ -155,10 +163,7 @@ class AggregateArtistsHadoop(luigi.contrib.hadoop.JobTask):
         :return: the target output for this task.
         :rtype: object (:py:class:`luigi.target.Target`)
         """
-        return luigi.contrib.hdfs.HdfsTarget(
-            "data/artist_streams_%s.tsv" % self.date_interval,
-            format=luigi.contrib.hdfs.PlainDir
-        )
+        return luigi.contrib.hdfs.HdfsTarget("data/artist_streams_%s.tsv" % self.date_interval)
 
     def requires(self):
         """
@@ -170,48 +175,34 @@ class AggregateArtistsHadoop(luigi.contrib.hadoop.JobTask):
         """
         return [StreamsHdfs(date) for date in self.date_interval]
 
-    def mapper(self, line):
-        """
-        The implementation of the map phase of the Hadoop job.
-
-        :param line: the input.
-        :return: tuple ((key, value) or, in this case, (artist, 1 stream count))
-        """
-        _, artist, _ = line.strip().split()
-        yield artist, 1
-
-    def reducer(self, key, values):
-        """
-        The implementation of the reducer phase of the Hadoop job.
-
-        :param key: the artist.
-        :param values: the stream count.
-        :return: tuple (artist, count of streams)
-        """
-        yield key, sum(values)
+    def app_options(self):
+        # :func:`~luigi.task.Task.input` returns the targets produced by the tasks in
+        # `~luigi.task.Task.requires`.
+        return [','.join([p.path for p in self.input()]),
+                self.output().path]
 
 
 class Top10Artists(luigi.Task):
     """
     This task runs over the target data returned by :py:meth:`~/.AggregateArtists.output` or
-    :py:meth:`~/.AggregateArtistsHadoop.output` in case :py:attr:`~/.Top10Artists.use_hadoop` is set and
+    :py:meth:`~/.AggregateArtistsSpark.output` in case :py:attr:`~/.Top10Artists.use_spark` is set and
     writes the result into its :py:meth:`~.Top10Artists.output` target (a file in local filesystem).
     """
 
     date_interval = luigi.DateIntervalParameter()
-    use_hadoop = luigi.BoolParameter()
+    use_spark = luigi.BoolParameter()
 
     def requires(self):
         """
         This task's dependencies:
 
         * :py:class:`~.AggregateArtists` or
-        * :py:class:`~.AggregateArtistsHadoop` if :py:attr:`~/.Top10Artists.use_hadoop` is set.
+        * :py:class:`~.AggregateArtistsSpark` if :py:attr:`~/.Top10Artists.use_spark` is set.
 
         :return: object (:py:class:`luigi.task.Task`)
         """
-        if self.use_hadoop:
-            return AggregateArtistsHadoop(self.date_interval)
+        if self.use_spark:
+            return AggregateArtistsSpark(self.date_interval)
         else:
             return AggregateArtists(self.date_interval)
 
@@ -235,7 +226,7 @@ class Top10Artists(luigi.Task):
                     artist,
                     str(streams)
                 ])
-                out_file.write((out_line + '\n'))
+                out_file.write(out_line + '\n')
 
     def _input_iterator(self):
         with self.input().open('r') as in_file:
@@ -256,7 +247,7 @@ class ArtistToplistToDatabase(luigi.contrib.postgres.CopyToTable):
     """
 
     date_interval = luigi.DateIntervalParameter()
-    use_hadoop = luigi.BoolParameter()
+    use_spark = luigi.BoolParameter()
 
     host = "localhost"
     database = "toplists"
@@ -277,7 +268,7 @@ class ArtistToplistToDatabase(luigi.contrib.postgres.CopyToTable):
 
         :return: list of object (:py:class:`luigi.task.Task`)
         """
-        return Top10Artists(self.date_interval, self.use_hadoop)
+        return Top10Artists(self.date_interval, self.use_spark)
 
 
 if __name__ == "__main__":

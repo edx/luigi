@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -111,7 +110,7 @@ class TaskTest(unittest.TestCase):
         self.assertEqual(sorted(flatten(['foo', ['bar', 'troll']])), ['bar', 'foo', 'troll'])
         self.assertEqual(flatten('foo'), ['foo'])
         self.assertEqual(flatten(42), [42])
-        self.assertEqual(flatten((len(i) for i in ["foo", "troll"])), [3, 5])
+        self.assertEqual(flatten(len(i) for i in ["foo", "troll"]), [3, 5])
         self.assertRaises(TypeError, flatten, (len(i) for i in ["foo", "troll", None]))
 
     def test_externalized_task_picklable(self):

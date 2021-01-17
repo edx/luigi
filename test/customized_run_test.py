@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -30,7 +29,7 @@ class DummyTask(luigi.Task):
     n = luigi.Parameter()
 
     def __init__(self, *args, **kwargs):
-        super(DummyTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.has_run = False
 
     def complete(self):
@@ -44,11 +43,11 @@ class DummyTask(luigi.Task):
 class CustomizedLocalScheduler(luigi.scheduler.Scheduler):
 
     def __init__(self, *args, **kwargs):
-        super(CustomizedLocalScheduler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.has_run = False
 
     def get_work(self, worker, host=None, **kwargs):
-        r = super(CustomizedLocalScheduler, self).get_work(worker=worker, host=host)
+        r = super().get_work(worker=worker, host=host)
         self.has_run = True
         return r
 
@@ -59,11 +58,11 @@ class CustomizedLocalScheduler(luigi.scheduler.Scheduler):
 class CustomizedRemoteScheduler(luigi.rpc.RemoteScheduler):
 
     def __init__(self, *args, **kwargs):
-        super(CustomizedRemoteScheduler, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.has_run = False
 
     def get_work(self, worker, host=None):
-        r = super(CustomizedRemoteScheduler, self).get_work(worker=worker, host=host)
+        r = super().get_work(worker=worker, host=host)
         self.has_run = True
         return r
 
@@ -74,11 +73,11 @@ class CustomizedRemoteScheduler(luigi.rpc.RemoteScheduler):
 class CustomizedWorker(luigi.worker.Worker):
 
     def __init__(self, *args, **kwargs):
-        super(CustomizedWorker, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.has_run = False
 
     def _run_task(self, task_id):
-        super(CustomizedWorker, self)._run_task(task_id)
+        super()._run_task(task_id)
         self.has_run = True
 
     def complete(self):

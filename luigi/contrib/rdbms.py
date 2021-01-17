@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -27,7 +26,125 @@ import luigi.task
 logger = logging.getLogger('luigi-interface')
 
 
-class CopyToTable(luigi.task.MixinNaiveBulkComplete, luigi.Task):
+class _MetadataColumnsMixin:
+    """Provide an additional behavior that adds columns and values to tables
+
+    This mixin is used to provide an additional behavior that allow a task to
+    add generic metadata columns to every table created for both PSQL and
+    Redshift.
+
+    Example:
+
+        This is a use-case example of how this mixin could come handy and how
+        to use it.
+
+        .. code:: python
+
+            class CommonMetaColumnsBehavior:
+                def update_report_execution_date_query(self):
+                    query = "UPDATE {0} " \
+                            "SET date_param = DATE '{1}' " \
+                            "WHERE date_param IS NULL".format(self.table, self.date)
+
+                    return query
+
+                @property
+                def metadata_columns(self):
+                    if self.date:
+                        cols.append(('date_param', 'VARCHAR'))
+
+                    return cols
+
+                @property
+                def metadata_queries(self):
+                    queries = [self.update_created_tz_query()]
+                    if self.date:
+                        queries.append(self.update_report_execution_date_query())
+
+                    return queries
+
+
+            class RedshiftCopyCSVToTableFromS3(CommonMetaColumnsBehavior, redshift.S3CopyToTable):
+                "We have some business override here that would only add noise to the
+                example, so let's assume that this is only a shell."
+                pass
+
+
+            class UpdateTableA(RedshiftCopyCSVToTableFromS3):
+                date = luigi.Parameter()
+                table = 'tableA'
+
+                def queries():
+                    return [query_content_for('/queries/deduplicate_dupes.sql')]
+
+
+            class UpdateTableB(RedshiftCopyCSVToTableFromS3):
+                date = luigi.Parameter()
+                table = 'tableB'
+    """
+    @property
+    def metadata_columns(self):
+        """Returns the default metadata columns.
+
+        Those columns are columns that we want each tables to have by default.
+        """
+        return []
+
+    @property
+    def metadata_queries(self):
+        return []
+
+    @property
+    def enable_metadata_columns(self):
+        return False
+
+    def _add_metadata_columns(self, connection):
+        cursor = connection.cursor()
+
+        for column in self.metadata_columns:
+            if len(column) == 0:
+                raise ValueError("_add_metadata_columns is unable to infer column information from column {column} for {table}".format(column=column,
+                                                                                                                                       table=self.table))
+
+            column_name = column[0]
+            if not self._column_exists(cursor, column_name):
+                logger.info(f'Adding missing metadata column {column} to {self.table}')
+                self._add_column_to_table(cursor, column)
+
+    def _column_exists(self, cursor, column_name):
+        if '.' in self.table:
+            schema, table = self.table.split('.')
+            query = "SELECT 1 AS column_exists " \
+                    "FROM information_schema.columns " \
+                    "WHERE table_schema = LOWER('{}') AND table_name = LOWER('{}') AND column_name = LOWER('{}') LIMIT 1;".format(schema, table, column_name)
+        else:
+            query = "SELECT 1 AS column_exists " \
+                    "FROM information_schema.columns " \
+                    "WHERE table_name = LOWER('{}') AND column_name = LOWER('{}') LIMIT 1;".format(self.table, column_name)
+
+        cursor.execute(query)
+        result = cursor.fetchone()
+        return bool(result)
+
+    def _add_column_to_table(self, cursor, column):
+        if len(column) == 1:
+            raise ValueError("_add_column_to_table() column type not specified for {column}".format(column=column[0]))
+        elif len(column) == 2:
+            query = "ALTER TABLE {table} ADD COLUMN {column};".format(table=self.table, column=' '.join(column))
+        elif len(column) == 3:
+            query = "ALTER TABLE {table} ADD COLUMN {column} ENCODE {encoding};".format(table=self.table, column=' '.join(column[0:2]), encoding=column[2])
+        else:
+            raise ValueError(f"_add_column_to_table() found no matching behavior for {column}")
+
+        cursor.execute(query)
+
+    def post_copy_metacolumns(self, cursor):
+        logger.info('Executing post copy metadata queries')
+        for query in self.metadata_queries:
+            cursor.execute(query)
+
+
+class CopyToTable(luigi.task.MixinNaiveBulkComplete, _MetadataColumnsMixin, luigi.Task):
     """
     An abstract task for inserting a data set into RDBMS.
 
@@ -41,26 +158,36 @@ class CopyToTable(luigi.task.MixinNaiveBulkComplete, luigi.Task):
         * `password`,
         * `table`
         * `columns`
+        * `port`
     """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def host(self):
         return None
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def database(self):
         return None
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def user(self):
         return None
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def password(self):
         return None
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def table(self):
+        return None
+
+    @property
+    def port(self):
         return None
 
     # specify the columns that are to be inserted (same as are returned by columns)
@@ -90,9 +217,9 @@ class CopyToTable(luigi.task.MixinNaiveBulkComplete, luigi.Task):
         elif len(self.columns[0]) == 2:
             # if columns is specified as (name, type) tuples
             coldefs = ','.join(
-                '{name} {type}'.format(name=name, type=type) for name, type in self.columns
+                f'{name} {type}' for name, type in self.columns
             )
-            query = "CREATE TABLE {table} ({coldefs})".format(table=self.table, coldefs=coldefs)
+            query = f"CREATE TABLE {self.table} ({coldefs})"
             connection.cursor().execute(query)
 
     @property
@@ -119,6 +246,9 @@ class CopyToTable(luigi.task.MixinNaiveBulkComplete, luigi.Task):
         # clear_table attribtue will have noticed it doesn't work anymore
         if hasattr(self, "clear_table"):
             raise Exception("The clear_table attribute has been removed. Override init_copy instead!")
+
+        if self.enable_metadata_columns:
+            self._add_metadata_columns(connection.cursor())
 
     def post_copy(self, connection):
         """
@@ -151,40 +281,67 @@ class Query(luigi.task.MixinNaiveBulkComplete, luigi.Task):
 
         Optionally override:
 
+        * `port`,
         * `autocommit`
+        * `update_id`
 
         Subclass and override the following methods:
 
+        * `run`
         * `output`
     """
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def host(self):
+        """
+        Host of the RDBMS. Implementation should support `hostname:port`
+        to encode port.
+        """
         return None
 
-    @abc.abstractproperty
+    @property
+    def port(self):
+        """
+        Override to specify port separately from host.
+        """
+        return None
+
+    @property
+    @abc.abstractmethod
     def database(self):
         return None
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def user(self):
         return None
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def password(self):
         return None
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def table(self):
         return None
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def query(self):
         return None
 
     @property
     def autocommit(self):
         return False
+
+    @property
+    def update_id(self):
+        """
+        Override to create a custom marker table 'update_id' signature for Query subclass task instances
+        """
+        return self.task_id
 
     @abc.abstractmethod
     def run(self):
@@ -196,10 +353,3 @@ class Query(luigi.task.MixinNaiveBulkComplete, luigi.Task):
         Override with an RDBMS Target (e.g. PostgresTarget or RedshiftTarget) to record execution in a marker table
         """
         raise NotImplementedError("This method must be overridden")
-
-    @property
-    def update_id(self):
-        """
-        Override to create a custom marker table 'update_id' signature for Query subclass task instances
-        """
-        return self.task_id

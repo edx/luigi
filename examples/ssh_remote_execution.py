@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -50,7 +49,7 @@ class CreateRemoteData(luigi.Task):
     def run(self):
         remote = RemoteContext(SSH_HOST)
         print(remote.check_output([
-            "ps aux > {0}".format(self.output().path)
+            f"ps aux > {self.output().path}"
         ]))
 
 

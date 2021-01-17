@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -22,7 +21,7 @@ import luigi.notifications
 import luigi.worker
 from luigi import Parameter, RemoteScheduler, Task
 from luigi.worker import Worker
-from mock import Mock
+from unittest.mock import Mock
 
 luigi.notifications.DEBUG = True
 
@@ -31,7 +30,7 @@ class DummyTask(Task):
     param = Parameter()
 
     def __init__(self, *args, **kwargs):
-        super(DummyTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.has_run = False
 
     def complete(self):
@@ -52,7 +51,7 @@ class MultiprocessWorkerTest(unittest.TestCase):
         self.scheduler.add_task = Mock()
         with Worker(scheduler=self.scheduler, worker_id='X', worker_processes=2) as worker:
             self.worker = worker
-            super(MultiprocessWorkerTest, self).run(result)
+            super().run(result)
 
     def gw_res(self, pending, task_id):
         return dict(n_pending_tasks=pending,

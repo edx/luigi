@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -353,8 +352,7 @@ class CopyToIndex(luigi.Task):
         Beside the user defined fields, the document may contain an `_index`, `_type` and `_id`.
         """
         with self.input().open('r') as fobj:
-            for line in fobj:
-                yield line
+            yield from fobj
 
 # everything below will rarely have to be overridden
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -20,7 +19,7 @@ import datetime
 from helpers import with_config, LuigiTestCase, parsing, in_parse, RunOnceTask
 from datetime import timedelta
 import enum
-import mock
+from unittest import mock
 
 import luigi
 import luigi.date_interval
@@ -484,7 +483,7 @@ class TestParametersHashability(LuigiTestCase):
 class TestNewStyleGlobalParameters(LuigiTestCase):
 
     def setUp(self):
-        super(TestNewStyleGlobalParameters, self).setUp()
+        super().setUp()
         MockTarget.fs.clear()
 
     def expect_keys(self, expected):

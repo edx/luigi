@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -139,7 +138,7 @@ class LocalTarget(FileSystemTarget):
             if not is_tmp:
                 raise Exception('path or is_tmp must be set')
             path = os.path.join(tempfile.gettempdir(), 'luigi-tmp-%09d' % random.randint(0, 999999999))
-        super(LocalTarget, self).__init__(path)
+        super().__init__(path)
         self.format = format
         self.is_tmp = is_tmp
 

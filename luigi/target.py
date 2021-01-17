@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -129,7 +128,7 @@ class FileSystem(object):
         :param bool raise_if_exists: raise luigi.target.FileAlreadyExists if
                                      the folder already exists.
         """
-        raise NotImplementedError("mkdir() not implemented on {0}".format(self.__class__.__name__))
+        raise NotImplementedError(f"mkdir() not implemented on {self.__class__.__name__}")
 
     def isdir(self, path):
         """
@@ -139,7 +138,7 @@ class FileSystem(object):
 
         *Note*: This method is optional, not all FileSystem subclasses implements it.
         """
-        raise NotImplementedError("isdir() not implemented on {0}".format(self.__class__.__name__))
+        raise NotImplementedError(f"isdir() not implemented on {self.__class__.__name__}")
 
     def listdir(self, path):
         """Return a list of files rooted in path.
@@ -151,13 +150,13 @@ class FileSystem(object):
 
         *Note*: This method is optional, not all FileSystem subclasses implements it.
         """
-        raise NotImplementedError("listdir() not implemented on {0}".format(self.__class__.__name__))
+        raise NotImplementedError(f"listdir() not implemented on {self.__class__.__name__}")
 
     def move(self, path, dest):
         """
         Move a file, as one would expect.
         """
-        raise NotImplementedError("move() not implemented on {0}".format(self.__class__.__name__))
+        raise NotImplementedError(f"move() not implemented on {self.__class__.__name__}")
 
     def rename_dont_move(self, path, dest):
         """
@@ -168,7 +167,7 @@ class FileSystem(object):
         implementation.  It will just do ``move()`` if the file doesn't
         ``exists()`` already.
         """
-        warnings.warn("File system {} client doesn't support atomic mv.".format(self.__class__.__name__))
+        warnings.warn(f"File system {self.__class__.__name__} client doesn't support atomic mv.")
         if self.exists(dest):
             raise FileAlreadyExists()
         self.move(path, dest)
@@ -323,10 +322,10 @@ class AtomicLocalFile(io.BufferedWriter):
     def __init__(self, path):
         self.__tmp_path = self.generate_tmp_path(path)
         self.path = path
-        super(AtomicLocalFile, self).__init__(io.FileIO(self.__tmp_path, 'w'))
+        super().__init__(io.FileIO(self.__tmp_path, 'w'))
 
     def close(self):
-        super(AtomicLocalFile, self).close()
+        super().close()
         self.move_to_final_destination()
 
     def generate_tmp_path(self, path):
@@ -347,4 +346,4 @@ class AtomicLocalFile(io.BufferedWriter):
         " Close/commit the file if there are no exception "
         if exc_type:
             return
-        return super(AtomicLocalFile, self).__exit__(exc_type, exc, traceback)
+        return super().__exit__(exc_type, exc, traceback)

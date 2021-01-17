@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2015 Gouthaman Balaraman
 #
@@ -408,6 +407,6 @@ class CopyToTable(luigi.Task):
         :param table_bound: The object referring to the table
         :return:
         """
-        bound_cols = dict((c, sqlalchemy.bindparam("_" + c.key)) for c in table_bound.columns)
+        bound_cols = {c: sqlalchemy.bindparam("_" + c.key) for c in table_bound.columns}
         ins = table_bound.insert().values(bound_cols)
         conn.execute(ins, ins_rows)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -47,10 +46,10 @@ class MockFileTest(unittest.TestCase):
     def test_unicode(self):
         t = MockTarget("foo")
         with t.open('w') as b:
-            b.write(u"bar")
+            b.write("bar")
 
         with t.open('r') as b:
-            self.assertEqual(b.read(), u'bar')
+            self.assertEqual(b.read(), 'bar')
 
 
 class MockFileSystemTest(unittest.TestCase):

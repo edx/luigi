@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -64,7 +63,7 @@ class Register(abc.ABCMeta):
         When the set or inherited namespace evaluates to ``None``, set the task namespace to
         whatever the currently declared namespace is.
         """
-        cls = super(Register, metacls).__new__(metacls, classname, bases, classdict)
+        cls = super().__new__(metacls, classname, bases, classdict)
         cls._namespace_at_class_time = metacls._get_namespace(cls.__module__)
         metacls._reg.append(cls)
         return cls
@@ -122,7 +121,7 @@ class Register(abc.ABCMeta):
         if not cls.get_task_namespace():
             return cls.__name__
         else:
-            return "{}.{}".format(cls.get_task_namespace(), cls.__name__)
+            return f"{cls.get_task_namespace()}.{cls.__name__}"
 
     @classmethod
     def _get_reg(cls):

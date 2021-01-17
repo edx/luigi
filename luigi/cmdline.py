@@ -15,14 +15,14 @@ def luigid(argv=sys.argv[1:]):
     import luigi.server
     import luigi.process
     import luigi.configuration
-    parser = argparse.ArgumentParser(description=u'Central luigi server')
-    parser.add_argument(u'--background', help=u'Run in background mode', action='store_true')
-    parser.add_argument(u'--pidfile', help=u'Write pidfile')
-    parser.add_argument(u'--logdir', help=u'log directory')
-    parser.add_argument(u'--state-path', help=u'Pickled state file')
-    parser.add_argument(u'--address', help=u'Listening interface')
-    parser.add_argument(u'--unix-socket', help=u'Unix socket path')
-    parser.add_argument(u'--port', default=8082, help=u'Listening port')
+    parser = argparse.ArgumentParser(description='Central luigi server')
+    parser.add_argument('--background', help='Run in background mode', action='store_true')
+    parser.add_argument('--pidfile', help='Write pidfile')
+    parser.add_argument('--logdir', help='log directory')
+    parser.add_argument('--state-path', help='Pickled state file')
+    parser.add_argument('--address', help='Listening interface')
+    parser.add_argument('--unix-socket', help='Unix socket path')
+    parser.add_argument('--port', default=8082, help='Listening port')
 
     opts = parser.parse_args(argv)
 

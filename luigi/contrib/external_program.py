@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2016 Spotify AB
 #
@@ -31,12 +30,17 @@ from one command to the next, you're probably better off using something like
 
 import logging
 import os
+import re
 import signal
 import subprocess
 import sys
 import tempfile
+from contextlib import contextmanager
+from multiprocessing import Process
+from time import sleep
 
 import luigi
+from luigi.parameter import ParameterVisibility
 
 logger = logging.getLogger('luigi-interface')
 
@@ -53,6 +57,34 @@ class ExternalProgramTask(luigi.Task):
     and you can optionally override :py:meth:`program_environment` if you want to
     control the environment variables (see :py:class:`ExternalPythonProgramTask`
     for an example).
+
+    By default, the output (stdout and stderr) of the run external program
+    is being captured and displayed after the execution has ended. This
+    behaviour can be overridden by passing ``--capture-output False``
+    """
+
+    capture_output = luigi.BoolParameter(default=True, significant=False, positional=False)
+
+    stream_for_searching_tracking_url = luigi.parameter.ChoiceParameter(
+        var_type=str, choices=['none', 'stdout', 'stderr'], default='none',
+        significant=False, positional=False, visibility=ParameterVisibility.HIDDEN,
+        description="Stream for searching tracking URL")
+    """
+    Used for defining which stream should be tracked for URL, may be set to 'stdout', 'stderr' or 'none'.
+
+    Default value is 'none', so URL tracking is not performed.
+    """
+
+    tracking_url_pattern = luigi.OptionalParameter(
+        default=None, significant=False, positional=False, visibility=ParameterVisibility.HIDDEN,
+        description="Regex pattern used for searching URL in the logs of the external program")
+    """
+    Regex pattern used for searching URL in the logs of the external program.
+
+    If a log line matches the regex, the first group in the matching is set as the tracking URL
+    for the job in the web UI. Example: 'Job UI is here: (https?://.*)'.
+
+    Default value is None, so URL tracking is not performed.
     """
 
     def program_args(self):
@@ -85,43 +117,96 @@ class ExternalProgramTask(luigi.Task):
         file_object.seek(0)
         return ''.join(map(lambda s: s.decode('utf-8'), file_object.readlines()))
 
+    def build_tracking_url(self, logs_output):
+        """
+        This method is intended for transforming pattern match in logs to an URL
+        :param logs_output: Found match of `self.tracking_url_pattern`
+        :return: a tracking URL for the task
+        """
+        return logs_output
+
     def run(self):
         args = list(map(str, self.program_args()))
 
         logger.info('Running command: %s', ' '.join(args))
-        tmp_stdout, tmp_stderr = tempfile.TemporaryFile(), tempfile.TemporaryFile()
         env = self.program_environment()
-        proc = subprocess.Popen(
-            args,
-            env=env,
-            stdout=tmp_stdout,
-            stderr=tmp_stderr
-        )
+        kwargs = {'env': env}
+        tmp_stdout, tmp_stderr = None, None
+        if self.capture_output:
+            tmp_stdout, tmp_stderr = tempfile.TemporaryFile(), tempfile.TemporaryFile()
+            kwargs.update({'stdout': tmp_stdout, 'stderr': tmp_stderr})
 
         try:
-            with ExternalProgramRunContext(proc):
-                proc.wait()
+            if self.stream_for_searching_tracking_url != 'none' and self.tracking_url_pattern is not None:
+                with self._proc_with_tracking_url_context(proc_args=args, proc_kwargs=kwargs) as proc:
+                    proc.wait()
+            else:
+                proc = subprocess.Popen(args, **kwargs)
+                with ExternalProgramRunContext(proc):
+                    proc.wait()
             success = proc.returncode == 0
 
-            stdout = self._clean_output_file(tmp_stdout)
-            stderr = self._clean_output_file(tmp_stderr)
+            if self.capture_output:
+                stdout = self._clean_output_file(tmp_stdout)
+                stderr = self._clean_output_file(tmp_stderr)
 
-            if stdout:
-                logger.info('Program stdout:\n{}'.format(stdout))
-            if stderr:
-                if self.always_log_stderr or not success:
-                    logger.info('Program stderr:\n{}'.format(stderr))
+                if stdout:
+                    logger.info(f'Program stdout:\n{stdout}')
+                if stderr:
+                    if self.always_log_stderr or not success:
+                        logger.info(f'Program stderr:\n{stderr}')
+            else:
+                stdout, stderr = None, None
 
             if not success:
                 raise ExternalProgramRunError(
-                    'Program failed with return code={}:'.format(proc.returncode),
+                    f'Program failed with return code={proc.returncode}:',
                     args, env=env, stdout=stdout, stderr=stderr)
         finally:
-            tmp_stderr.close()
-            tmp_stdout.close()
+            if self.capture_output:
+                tmp_stderr.close()
+                tmp_stdout.close()
+
+    @contextmanager
+    def _proc_with_tracking_url_context(self, proc_args, proc_kwargs):
+        time_to_sleep = 0.5
+        file_to_write = proc_kwargs.get(self.stream_for_searching_tracking_url)
+        proc_kwargs.update({self.stream_for_searching_tracking_url: subprocess.PIPE})
+        main_proc = subprocess.Popen(proc_args, **proc_kwargs)
+        pipe_to_read = main_proc.stderr if self.stream_for_searching_tracking_url == 'stderr' else main_proc.stdout
+
+        def _track_url_by_pattern():
+            """
+            Scans the pipe looking for a passed pattern, if the pattern is found, `set_tracking_url` callback is sent.
+            If tmp_stdout is passed, also appends lines to this file.
+            """
+            pattern = re.compile(self.tracking_url_pattern)
+            for new_line in iter(pipe_to_read.readline, ''):
+                if new_line:
+                    if file_to_write:
+                        file_to_write.write(new_line)
+                    match = re.search(pattern, new_line.decode('utf-8'))
+                    if match:
+                        self.set_tracking_url(
+                            self.build_tracking_url(match.group(1))
+                        )
+                else:
+                    sleep(time_to_sleep)
+
+        track_proc = Process(target=_track_url_by_pattern)
+        try:
+            track_proc.start()
+            with ExternalProgramRunContext(main_proc):
+                yield main_proc
+        finally:
+            # need to wait a bit to let the subprocess read the last lines
+            track_proc.join(time_to_sleep * 2)
+            if track_proc.is_alive():
+                track_proc.terminate()
+            pipe_to_read.close()
 
 
-class ExternalProgramRunContext(object):
+class ExternalProgramRunContext:
     def __init__(self, proc):
         self.proc = proc
 
@@ -144,7 +229,7 @@ class ExternalProgramRunContext(object):
 
 class ExternalProgramRunError(RuntimeError):
     def __init__(self, message, args, env=None, stdout=None, stderr=None):
-        super(ExternalProgramRunError, self).__init__(message, args, env, stdout, stderr)
+        super().__init__(message, args, env, stdout, stderr)
         self.message = message
         self.args = args
         self.env = env
@@ -158,7 +243,7 @@ class ExternalProgramRunError(RuntimeError):
         info += '\nSTDERR: {}'.format(self.err or '[empty]')
         env_string = None
         if self.env:
-            env_string = ' '.join(['='.join([k, '\'{}\''.format(v)]) for k, v in self.env.items()])
+            env_string = ' '.join(['='.join([k, f'\'{v}\'']) for k, v in self.env.items()])
         info += '\nENVIRONMENT: {}'.format(env_string or '[empty]')
         # reset terminal color in case the ENVIRONMENT changes colors
         info += '\033[m'
@@ -186,7 +271,7 @@ class ExternalPythonProgramTask(ExternalProgramTask):
                     'value to the ``PYTHONPATH`` environment variable.')
 
     def program_environment(self):
-        env = super(ExternalPythonProgramTask, self).program_environment()
+        env = super().program_environment()
 
         if self.extra_pythonpath:
             pythonpath = ':'.join([self.extra_pythonpath, env.get('PYTHONPATH', '')])
@@ -194,7 +279,7 @@ class ExternalPythonProgramTask(ExternalProgramTask):
 
         if self.virtualenv:
             # Make the same changes to the env that a normal venv/bin/activate script would
-            path = ':'.join(['{}/bin'.format(self.virtualenv), env.get('PATH', '')])
+            path = ':'.join([f'{self.virtualenv}/bin', env.get('PATH', '')])
             env.update({
                 'PATH': path,
                 'VIRTUAL_ENV': self.virtualenv

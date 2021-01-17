@@ -88,7 +88,7 @@ class BigQueryLoadAvro(BigQueryLoadTask):
                                  body=patch).execute()
 
     def run(self):
-        super(BigQueryLoadAvro, self).run()
+        super().run()
 
         # We propagate documentation in one fire-and-forget attempt; the output table is
         # left to exist without documentation if this step raises an exception.

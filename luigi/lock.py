@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -19,14 +18,12 @@ Locking functionality when launching things from the command line.
 Uses a pidfile.
 This prevents multiple identical workflows to be launched simultaneously.
 """
-from __future__ import print_function
 
+import errno
 import hashlib
 import os
 import sys
 from subprocess import Popen, PIPE
-
-from luigi import six
 
 
 def getpcmd(pid):
@@ -37,7 +34,7 @@ def getpcmd(pid):
     """
     if os.name == "nt":
         # Use wmic command instead of ps on Windows.
-        cmd = 'wmic path win32_process where ProcessID=%s get Commandline' % (pid, )
+        cmd = 'wmic path win32_process where ProcessID=%s get Commandline 2> nul' % (pid, )
         with os.popen(cmd, 'r') as p:
             lines = [line for line in p.readlines() if line.strip("\r\n ") != ""]
             if lines:
@@ -64,18 +61,15 @@ def getpcmd(pid):
         # worked. See the pull request at
         # https://github.com/spotify/luigi/pull/1876
         try:
-            with open('/proc/{0}/cmdline'.format(pid), 'r') as fh:
-                if six.PY3:
-                    return fh.read().replace('\0', ' ').rstrip()
-                else:
-                    return fh.read().replace('\0', ' ').decode('utf8').rstrip()
-        except IOError:
+            with open(f'/proc/{pid}/cmdline') as fh:
+                return fh.read().replace('\0', ' ').rstrip()
+        except OSError:
             # the system may not allow reading the command line
             # of a process owned by another user
             pass
 
     # Fallback instead of None, for e.g. Cygwin where -o is an "unknown option" for the ps command:
-    return '[PROCESS_WITH_PID={}]'.format(pid)
+    return f'[PROCESS_WITH_PID={pid}]'
 
 
 def get_info(pid_dir, my_pid=None):
@@ -102,10 +96,14 @@ def acquire_for(pid_dir, num_available=1, kill_signal=None):
 
     my_pid, my_cmd, pid_file = get_info(pid_dir)
 
-    # Check if there is a pid file corresponding to this name
-    if not os.path.exists(pid_dir):
+    # Create a pid file if it does not exist
+    try:
         os.mkdir(pid_dir)
         os.chmod(pid_dir, 0o777)
+    except OSError as exc:
+        if exc.errno != errno.EEXIST:
+            raise
+        pass
 
     # Let variable "pids" be all pids who exist in the .pid-file who are still
     # about running the same command.
@@ -114,14 +112,14 @@ def acquire_for(pid_dir, num_available=1, kill_signal=None):
     if kill_signal is not None:
         for pid in pids:
             os.kill(pid, kill_signal)
-        print('Sent kill signal to Pids: {}'.format(pids))
+        print(f'Sent kill signal to Pids: {pids}')
         # We allow for the killer to progress, yet we don't want these to stack
         # up! So we only allow it once.
         num_available += 1
 
     if len(pids) >= num_available:
         # We are already running under a different pid
-        print('Pid(s) {} already running'.format(pids))
+        print(f'Pid(s) {pids} already running')
         if kill_signal is not None:
             print('Note: There have (probably) been 1 other "--take-lock"'
                   ' process which continued to run! Probably no need to run'
@@ -137,14 +135,14 @@ def _read_pids_file(pid_file):
     # First setup a python 2 vs 3 compatibility
     # http://stackoverflow.com/a/21368622/621449
     try:
-        FileNotFoundError
+        FileNotFoundError  # noqa: F823
     except NameError:
         # Should only happen on python 2
         FileNotFoundError = IOError
     # If the file happen to not exist, simply return
     # an empty set()
     try:
-        with open(pid_file, 'r') as f:
+        with open(pid_file) as f:
             return {int(pid_str.strip()) for pid_str in f if pid_str.strip()}
     except FileNotFoundError:
         return set()
@@ -152,7 +150,7 @@ def _read_pids_file(pid_file):
 
 def _write_pids_file(pid_file, pids_set):
     with open(pid_file, 'w') as f:
-        f.writelines('{}\n'.format(pid) for pid in pids_set)
+        f.writelines(f'{pid}\n' for pid in pids_set)
 
     # Make the .pid-file writable by all (when the os allows for it)
     if os.name != 'nt':

@@ -36,7 +36,7 @@ class TestVisualiser(ServerTestBase):
     """
 
     def setUp(self):
-        super(TestVisualiser, self).setUp()
+        super().setUp()
 
         x = 'I scream for ice cream'
         task = UberTask(base_task=FailingMergeSort, x=x, copies=4)
@@ -67,10 +67,10 @@ class TestVisualiser(ServerTestBase):
 
     def test(self):
         port = self.get_http_port()
-        print('Server port is {}'.format(port))
+        print(f'Server port is {port}')
         print('Starting phantomjs')
 
-        p = subprocess.Popen('phantomjs {}/phantomjs_test.js http://localhost:{}'.format(here, port),
+        p = subprocess.Popen(f'phantomjs {here}/phantomjs_test.js http://localhost:{port}',
                              shell=True, stdin=None)
 
         # PhantomJS may hang on an error so poll
@@ -84,7 +84,7 @@ class TestVisualiser(ServerTestBase):
         if status is None:
             raise AssertionError('PhantomJS failed to complete')
         else:
-            print('PhantomJS return status is {}'.format(status))
+            print(f'PhantomJS return status is {status}')
             assert status == 0
 
     # tasks tab tests.
@@ -92,7 +92,7 @@ class TestVisualiser(ServerTestBase):
         port = self.get_http_port()
         driver = webdriver.PhantomJS()
 
-        driver.get('http://localhost:{}'.format(port))
+        driver.get(f'http://localhost:{port}')
 
         length_select = driver.find_element_by_css_selector('select[name="taskTable_length"]')
         assert length_select.get_attribute('value') == '10'
@@ -123,7 +123,7 @@ class TestVisualiser(ServerTestBase):
         port = self.get_http_port()
         driver = webdriver.PhantomJS()
 
-        driver.get('http://localhost:{}'.format(port))
+        driver.get(f'http://localhost:{port}')
 
         # Check initial state.
         search_input = driver.find_element_by_css_selector('input[type="search"]')
@@ -148,7 +148,7 @@ class TestVisualiser(ServerTestBase):
         port = self.get_http_port()
         driver = webdriver.PhantomJS()
 
-        driver.get('http://localhost:{}'.format(port))
+        driver.get(f'http://localhost:{port}')
 
         # Order by name (asc).
         column = driver.find_elements_by_css_selector('#taskTable thead th')[1]
@@ -172,7 +172,7 @@ class TestVisualiser(ServerTestBase):
         port = self.get_http_port()
         driver = webdriver.PhantomJS()
 
-        driver.get('http://localhost:{}/static/visualiser/index.html#tab=tasks'.format(port))
+        driver.get(f'http://localhost:{port}/static/visualiser/index.html#tab=tasks')
 
         # Check initial state.
         checkbox = driver.find_element_by_css_selector('#serverSideCheckbox')
@@ -215,7 +215,7 @@ class TestVisualiser(ServerTestBase):
         port = self.get_http_port()
         driver = webdriver.PhantomJS()
 
-        driver.get('http://localhost:{}/static/visualiser/index.html#tab=graph'.format(port))
+        driver.get(f'http://localhost:{port}/static/visualiser/index.html#tab=graph')
 
         # Check initial state.
         invert_checkbox = driver.find_element_by_css_selector('#invertCheckbox')
@@ -235,7 +235,7 @@ class TestVisualiser(ServerTestBase):
         port = self.get_http_port()
         driver = webdriver.PhantomJS()
 
-        driver.get('http://localhost:{}/static/visualiser/index.html#tab=graph'.format(port))
+        driver.get(f'http://localhost:{port}/static/visualiser/index.html#tab=graph')
 
         # Check initial state.
         task_id_input = driver.find_element_by_css_selector('#js-task-id')
@@ -256,7 +256,7 @@ class TestVisualiser(ServerTestBase):
         port = self.get_http_port()
         driver = webdriver.PhantomJS()
 
-        driver.get('http://localhost:{}/static/visualiser/index.html#tab=graph'.format(port))
+        driver.get(f'http://localhost:{port}/static/visualiser/index.html#tab=graph')
 
         # Check initial state.
         hide_done_checkbox = driver.find_element_by_css_selector('#hideDoneCheckbox')
@@ -276,7 +276,7 @@ class TestVisualiser(ServerTestBase):
         port = self.get_http_port()
         driver = webdriver.PhantomJS()
 
-        driver.get('http://localhost:{}/static/visualiser/index.html#tab=graph'.format(port))
+        driver.get(f'http://localhost:{port}/static/visualiser/index.html#tab=graph')
 
         # Check initial state.
         svg_radio = driver.find_element_by_css_selector('input[value=svg]')
@@ -337,7 +337,7 @@ def generate_task_families(task_class, n):
     """
     ret = {}
     for i in range(n):
-        class_name = '{}_{}'.format(task_class.task_family, i)
+        class_name = f'{task_class.task_family}_{i}'
         ret[class_name] = type(class_name, (task_class,), {})
 
     return ret
@@ -395,7 +395,7 @@ class MergeSort(luigi.Task):
     x = luigi.Parameter(description='A string to be sorted')
 
     def __init__(self, *args, **kwargs):
-        super(MergeSort, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.result = MemoryTarget()
 
@@ -436,7 +436,7 @@ class FailingMergeSort(MergeSort):
         if self.x[0] == ' ':
             raise Exception('I failed')
         else:
-            return super(FailingMergeSort, self).run()
+            return super().run()
 
 
 if __name__ == '__main__':

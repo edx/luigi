@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -17,7 +16,7 @@
 from __future__ import print_function
 
 from helpers import unittest, skipOnTravis
-from mock import Mock
+from unittest.mock import Mock
 import re
 import random
 
@@ -92,7 +91,7 @@ class FileSystemTargetTestMixin(object):
     def test_unicode_obj(self):
         target = self.create_target()
 
-        origdata = u'lol\n'
+        origdata = 'lol\n'
         fobj = target.open("w")
         fobj.write(origdata)
         fobj.close()
@@ -151,7 +150,7 @@ class FileSystemTargetTestMixin(object):
 
     def test_text(self):
         t = self.create_target(luigi.format.UTF8)
-        a = u'我éçф'
+        a = '我éçф'
         with t.open('w') as f:
             f.write(a)
         with t.open('r') as f:
@@ -161,7 +160,7 @@ class FileSystemTargetTestMixin(object):
     def test_del_with_Text(self):
         t = self.create_target(luigi.format.UTF8)
         p = t.open('w')
-        print(u'test', file=p)
+        print('test', file=p)
         tp = getattr(p, 'tmp_path', '')
         del p
 
@@ -275,7 +274,7 @@ class FileSystemTargetTestMixin(object):
 
 class TemporaryPathTest(unittest.TestCase):
     def setUp(self):
-        super(TemporaryPathTest, self).setUp()
+        super().setUp()
         self.fs = Mock()
 
         class MyFileSystemTarget(luigi.target.FileSystemTarget):

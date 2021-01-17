@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module parses commands exactly the same as the luigi task runner. You must specify the module, the task and task paramters.
 Instead of executing a task, this module prints the significant paramters and state of the task and its dependencies in a tree format.
@@ -56,7 +55,7 @@ def print_tree(task, indent='', last=True):
     else:
         result += '|--'
         indent += '|  '
-    result += '[{0}-{1} ({2})]'.format(name, params, is_complete)
+    result += f'[{name}-{params} ({is_complete})]'
     children = flatten(task.requires())
     for index, child in enumerate(children):
         result += print_tree(child, indent, (index+1) == len(children))

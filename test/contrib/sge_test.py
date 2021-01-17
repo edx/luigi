@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -21,7 +20,7 @@ import os.path
 from glob import glob
 import unittest
 import logging
-from mock import patch
+from unittest.mock import patch
 
 import luigi
 from luigi.contrib.sge import SGEJobTask, _parse_qstat_state

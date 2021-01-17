@@ -1,5 +1,3 @@
-
-# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Outlier Bio, LLC
 #
@@ -33,7 +31,7 @@ Written and maintained by Marco Capuccini (@mcapuccini).
 import unittest
 import luigi
 import logging
-import mock
+from unittest import mock
 from luigi.contrib.kubernetes import KubernetesJobTask
 
 logger = logging.getLogger('luigi-interface')

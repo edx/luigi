@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Outlier Bio, LLC
 #
@@ -75,7 +74,7 @@ def _get_task_statuses(task_ids, cluster):
 
     # Error checking
     if response['failures'] != []:
-        raise Exception('There were some failures:\n{0}'.format(
+        raise Exception('There were some failures:\n{}'.format(
             response['failures']))
     status_code = response['ResponseMetadata']['HTTPStatusCode']
     if status_code != 200:
@@ -90,10 +89,10 @@ def _track_tasks(task_ids, cluster):
     while True:
         statuses = _get_task_statuses(task_ids, cluster)
         if all([status == 'STOPPED' for status in statuses]):
-            logger.info('ECS tasks {0} STOPPED'.format(','.join(task_ids)))
+            logger.info('ECS tasks {} STOPPED'.format(','.join(task_ids)))
             break
         time.sleep(POLL_TIME)
-        logger.debug('ECS task status for tasks {0}: {1}'.format(task_ids, statuses))
+        logger.debug(f'ECS task status for tasks {task_ids}: {statuses}')
 
 
 class ECSTask(luigi.Task):
@@ -166,8 +165,8 @@ class ECSTask(luigi.Task):
     def run(self):
         if (not self.task_def and not self.task_def_arn) or \
                 (self.task_def and self.task_def_arn):
-            raise ValueError(('Either (but not both) a task_def (dict) or'
-                              'task_def_arn (string) must be assigned'))
+            raise ValueError('Either (but not both) a task_def (dict) or'
+                              'task_def_arn (string) must be assigned')
         if not self.task_def_arn:
             # Register the task and get assigned taskDefinition ID (arn)
             response = client.register_task_definition(**self.task_def)
@@ -182,6 +181,11 @@ class ECSTask(luigi.Task):
         response = client.run_task(taskDefinition=self.task_def_arn,
                                    overrides=overrides,
                                    cluster=self.cluster)
+
+        if response['failures']:
+            raise Exception(", ".join(["fail to run task {} reason: {}".format(failure['arn'], failure['reason'])
+                                       for failure in response['failures']]))
+
         self._task_ids = [task['taskArn'] for task in response['tasks']]
 
         # Wait on task completion

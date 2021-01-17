@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -16,7 +15,7 @@
 #
 
 from helpers import unittest
-import mock
+from unittest import mock
 import sys
 import socket
 
@@ -120,19 +119,19 @@ class ExceptionFormatTest(unittest.TestCase):
 
     def _check_body(self, body, task, html=False):
         if html:
-            self.assertIn('<th>name</th><td>{}</td>'.format(task.task_family), body)
+            self.assertIn(f'<th>name</th><td>{task.task_family}</td>', body)
             self.assertIn('<div class="highlight"', body)
             self.assertIn('Oops!', body)
 
             for param, value in task.param_kwargs.items():
-                self.assertIn('<th>{}</th><td>{}</td>'.format(param, value), body)
+                self.assertIn(f'<th>{param}</th><td>{value}</td>', body)
         else:
-            self.assertIn('Name: {}\n'.format(task.task_family), body)
+            self.assertIn(f'Name: {task.task_family}\n', body)
             self.assertIn('Parameters:\n', body)
             self.assertIn('TestException: Oops!', body)
 
             for param, value in task.param_kwargs.items():
-                self.assertIn('{}: {}\n'.format(param, value), body)
+                self.assertIn(f'{param}: {value}\n', body)
 
     @with_config({"email": {"receiver": "a@a.a"}})
     def testEmailRecipients(self):
@@ -292,7 +291,7 @@ class TestSMTPEmail(unittest.TestCase, NotificationFixture):
 
                 try:
                     notifications.send_email_smtp(*self.notification_args)
-                except socket.error:
+                except OSError:
                     self.fail("send_email_smtp() raised expection unexpectedly")
 
                 SMTP.assert_called_once_with(**smtp_kws)
@@ -421,7 +420,7 @@ class TestNotificationDispatcher(unittest.TestCase, NotificationFixture):
 
         expected_args = self.notification_args
 
-        with mock.patch('luigi.notifications.{}'.format(target)) as sender:
+        with mock.patch(f'luigi.notifications.{target}') as sender:
             notifications.send_email(self.subject, self.message, self.sender,
                                      self.recipients, image_png=self.image_png)
 

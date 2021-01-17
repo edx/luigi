@@ -1,5 +1,5 @@
 import luigi
-import mock
+from unittest import mock
 import random
 import six
 import unittest
@@ -68,7 +68,7 @@ class TestOpenerTarget(unittest.TestCase):
         '''Verify basic local target url
 
         '''
-        local_file = "file://{}".format(self.local_file)
+        local_file = f"file://{self.local_file}"
         target = OpenerTarget(local_file)
         self.assertEqual(type(target), LocalTarget)
 
@@ -85,7 +85,7 @@ class TestOpenerTarget(unittest.TestCase):
         lt_init_patch.return_value = None
         lt_del_patch.return_value = None
 
-        local_file = "file://{}?is_tmp".format(self.local_file)
+        local_file = f"file://{self.local_file}?is_tmp"
         OpenerTarget(local_file)
         lt_init_patch.assert_called_with(self.local_file, is_tmp=True)
 

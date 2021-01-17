@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -33,4 +32,4 @@ class HDFSCliError(Exception):
                "---stderr---\n"
                "%s"
                "------------") % (command, returncode, stdout, stderr)
-        super(HDFSCliError, self).__init__(msg)
+        super().__init__(msg)

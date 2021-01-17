@@ -1,0 +1,41 @@
+# Requirements for test runs
+-c constraints.txt
+
+-r base.txt
+
+mock
+moto
+HTTPretty
+nose
+docker
+unittest2
+boto
+boto3
+pyhive[presto]
+s3transfer
+sqlalchemy
+elasticsearch
+enum34
+hdp
+hdfs
+psycopg2
+mysql-connector-python
+google-api-python-client
+avro-python3
+google-auth
+google-auth-httplib2
+google-compute-engine
+coverage
+codecov
+requests
+requests-unixsocket
+pygments
+hypothesis
+selenium
+pymongo
+toml
+response
+azure-storage-blob
+datadog
+prometheus-client
+dropbox

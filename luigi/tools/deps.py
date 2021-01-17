@@ -58,11 +58,9 @@ def dfs_paths(start_task, goal_task_family, path=None):
     if path is None:
         path = [start_task]
     if start_task.task_family == goal_task_family or goal_task_family is None:
-        for item in path:
-            yield item
+        yield from path
     for next in get_task_requires(start_task) - set(path):
-        for t in dfs_paths(next, goal_task_family, path + [next]):
-            yield t
+        yield from dfs_paths(next, goal_task_family, path + [next])
 
 
 class upstream(luigi.task.Config):
@@ -98,13 +96,13 @@ def get_task_output_description(task_output):
     output_description = "n/a"
 
     if isinstance(task_output, RemoteTarget):
-        output_description = "[SSH] {0}:{1}".format(task_output._fs.remote_context.host, task_output.path)
+        output_description = f"[SSH] {task_output._fs.remote_context.host}:{task_output.path}"
     elif isinstance(task_output, S3Target):
-        output_description = "[S3] {0}".format(task_output.path)
+        output_description = f"[S3] {task_output.path}"
     elif isinstance(task_output, FileSystemTarget):
-        output_description = "[FileSystem] {0}".format(task_output.path)
+        output_description = f"[FileSystem] {task_output.path}"
     elif isinstance(task_output, PostgresTarget):
-        output_description = "[DB] {0}:{1}".format(task_output.host, task_output.table)
+        output_description = f"[DB] {task_output.host}:{task_output.table}"
     else:
         output_description = "to be determined"
 
@@ -123,9 +121,9 @@ def main():
         else:
             output_descriptions = [get_task_output_description(task_output)]
 
-        print("   TASK: {0}".format(task))
+        print(f"   TASK: {task}")
         for desc in output_descriptions:
-            print("                       : {0}".format(desc))
+            print(f"                       : {desc}")
 
 
 if __name__ == '__main__':

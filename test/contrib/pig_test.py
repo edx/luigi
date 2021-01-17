@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -21,7 +20,7 @@ import tempfile
 import luigi
 from helpers import unittest
 from luigi.contrib.pig import PigJobError, PigJobTask
-from mock import patch
+from unittest.mock import patch
 
 
 class SimpleTestJob(PigJobTask):

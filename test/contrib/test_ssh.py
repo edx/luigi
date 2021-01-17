@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -84,7 +83,7 @@ class TestRemoteContext(unittest.TestCase):
         print("Setting up remote listener...")
 
         self.remote_server_handle = self.context.Popen([
-            "python", "-c", '"{0}"'.format(HELLO_SERVER_CMD)
+            "python", "-c", f'"{HELLO_SERVER_CMD}"'
         ], stdout=subprocess.PIPE)
 
         print("Setting up tunnel")
@@ -243,7 +242,7 @@ class TestRemoteTargetAtomicity(unittest.TestCase, target_test.FileSystemTargetT
         self.ctx.check_output(["echo -n 'hello' >", self.path])
         t = RemoteTarget(self.path, working_ssh_host)
         t.get(self.local_file)
-        f = open(self.local_file, 'r')
+        f = open(self.local_file)
         file_content = f.read()
         self.assertEqual(file_content, 'hello')
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -59,7 +58,7 @@ class TaskA(luigi.Task):
             pass
 
         with open(fn, 'a') as f:
-            f.write('{0}={1}\n'.format(self.__class__.__name__, self.i))
+            f.write(f'{self.__class__.__name__}={self.i}\n')
 
         self.output().done()
 
@@ -99,7 +98,7 @@ class RunAnywayTargetTest(unittest.TestCase):
         fn = os.path.join(temp_dir(), 'luigi-simulate-test.tmp')
 
         luigi.build([TaskWrap()], local_scheduler=True)
-        with open(fn, 'r') as f:
+        with open(fn) as f:
             data = f.read().strip().split('\n')
 
         data.sort()

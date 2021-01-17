@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -52,7 +51,7 @@ class HdfsFileSystem(luigi.target.FileSystem):
         """
         # We only override this method to be able to provide a more specific
         # docstring.
-        return super(HdfsFileSystem, self).rename_dont_move(path, dest)
+        return super().rename_dont_move(path, dest)
 
     @abc.abstractmethod
     def remove(self, path, recursive=True, skip_trash=False):

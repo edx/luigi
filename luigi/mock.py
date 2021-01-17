@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -155,7 +154,7 @@ class MockTarget(target.FileSystemTarget):
                         self._write_line = True
                     else:
                         self._write_line = False
-                super(Buffer, self).write(data)
+                super().write(data)
 
             def close(self):
                 if mode == 'w':
@@ -164,7 +163,7 @@ class MockTarget(target.FileSystemTarget):
                     except AttributeError:
                         pass
                     mock_target.fs.get_all_data()[fn] = self.getvalue()
-                super(Buffer, self).close()
+                super().close()
 
             def __exit__(self, exc_type, exc_val, exc_tb):
                 if not exc_type:

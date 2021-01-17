@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -24,7 +23,7 @@ from luigi.interface import _WorkerSchedulerFactory
 from luigi.worker import Worker
 from luigi.interface import core
 
-from mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch, MagicMock
 from helpers import LuigiTestCase, with_config
 
 luigi.notifications.DEBUG = True
@@ -38,7 +37,7 @@ class InterfaceTest(LuigiTestCase):
         self.worker_scheduler_factory = _WorkerSchedulerFactory()
         self.worker_scheduler_factory.create_worker = Mock(return_value=self.worker)
         self.worker_scheduler_factory.create_local_scheduler = Mock()
-        super(InterfaceTest, self).setUp()
+        super().setUp()
 
         class NoOpTask(luigi.Task):
             param = luigi.Parameter()

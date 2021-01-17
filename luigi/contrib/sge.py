@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -204,7 +203,7 @@ class SGEJobTask(luigi.Task):
         description="don't tarball (and extract) the luigi project files")
 
     def __init__(self, *args, **kwargs):
-        super(SGEJobTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.job_name:
             # use explicitly provided job name
             pass
@@ -220,7 +219,7 @@ class SGEJobTask(luigi.Task):
         if not os.path.exists(self.errfile):
             logger.info('No error file')
             return []
-        with open(self.errfile, "r") as f:
+        with open(self.errfile) as f:
             errors = f.readlines()
         if errors == []:
             return errors
@@ -288,7 +287,7 @@ class SGEJobTask(luigi.Task):
         runner_path = sge_runner.__file__
         if runner_path.endswith("pyc"):
             runner_path = runner_path[:-3] + "py"
-        job_str = 'python {0} "{1}" "{2}"'.format(
+        job_str = 'python {} "{}" "{}"'.format(
             runner_path, self.tmp_dir, os.getcwd())  # enclose tmp_dir in quotes to protect from special escape chars
         if self.no_tarball:
             job_str += ' "--no-tarball"'

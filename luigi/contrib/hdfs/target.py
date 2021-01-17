@@ -25,8 +25,7 @@ from luigi.target import FileSystemTarget
 from luigi.contrib.hdfs.config import tmppath
 from luigi.contrib.hdfs import format as hdfs_format
 from luigi.contrib.hdfs import clients as hdfs_clients
-from luigi.six.moves.urllib import parse as urlparse
-from luigi.six.moves import range
+from urllib import parse as urlparse
 
 
 class HdfsTarget(FileSystemTarget):
@@ -35,7 +34,7 @@ class HdfsTarget(FileSystemTarget):
         if path is None:
             assert is_tmp
             path = tmppath()
-        super(HdfsTarget, self).__init__(path)
+        super().__init__(path)
 
         if format is None:
             format = luigi.format.get_default_format() >> hdfs_format.Plain
@@ -185,3 +184,38 @@ class HdfsTarget(FileSystemTarget):
             return True
         except hdfs_clients.HDFSCliError:
             return False
+
+
+class HdfsFlagTarget(HdfsTarget):
+    """
+    Defines a target directory with a flag-file (defaults to `_SUCCESS`) used
+    to signify job success.
+
+    This checks for two things:
+
+    * the path exists (just like the HdfsTarget)
+    * the _SUCCESS file exists within the directory.
+
+    Because Hadoop outputs into a directory and not a single file,
+    the path is assumed to be a directory.
+    """
+    def __init__(self, path, format=None, client=None, flag='_SUCCESS'):
+        """
+        Initializes a HdfsFlagTarget.
+
+        :param path: the directory where the files are stored.
+        :type path: str
+        :param client:
+        :type client:
+        :param flag:
+        :type flag: str
+        """
+        if path[-1] != "/":
+            raise ValueError("HdfsFlagTarget requires the path to be to a "
+                             "directory.  It must end with a slash ( / ).")
+        super().__init__(path, format, client)
+        self.flag = flag
+
+    def exists(self):
+        hadoopSemaphore = self.path + self.flag
+        return self.fs.exists(hadoopSemaphore)

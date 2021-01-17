@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Twitter Inc
 #
@@ -25,7 +24,8 @@ from luigi.contrib import bigquery
 from luigi.contrib.gcs import GCSTarget
 
 from helpers import unittest
-from mock import MagicMock
+from unittest.mock import MagicMock
+from nose.plugins.attrib import attr
 
 PROJECT_ID = 'projectid'
 DATASET_ID = 'dataset'
@@ -59,7 +59,7 @@ class TestRunQueryTaskWithRequires(bigquery.BigQueryRunQueryTask):
         requires = self.requires().output().table
         dataset = requires.dataset_id
         table = requires.table_id
-        return 'SELECT * FROM [{dataset}.{table}]'.format(dataset=dataset, table=table)
+        return f'SELECT * FROM [{dataset}.{table}]'
 
     def output(self):
         return bigquery.BigQueryTarget(PROJECT_ID, DATASET_ID, self.table, client=self.client)
@@ -122,6 +122,7 @@ class TestExtractTask(bigquery.BigQueryExtractTask):
         return TestExternalBigQueryTask()
 
 
+@attr('contrib')
 class BigQueryTest(unittest.TestCase):
 
     def test_bulk_complete(self):
@@ -133,6 +134,14 @@ class BigQueryTest(unittest.TestCase):
         TestRunQueryTask.client = client
 
         complete = list(TestRunQueryTask.bulk_complete(parameters))
+        self.assertEqual(complete, ['table2'])
+
+        # Test that bulk_complete accepts lazy sequences in addition to lists
+        def parameters_gen():
+            yield 'table1'
+            yield 'table2'
+
+        complete = list(TestRunQueryTask.bulk_complete(parameters_gen()))
         self.assertEqual(complete, ['table2'])
 
     def test_dataset_doesnt_exist(self):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -364,7 +363,7 @@ class PostgresQuery(rdbms.Query):
         cursor = connection.cursor()
         sql = self.query
 
-        logger.info('Executing query from task: {name}'.format(name=self.__class__))
+        logger.info(f'Executing query from task: {self.__class__}')
         cursor.execute(sql)
 
         # Update marker table

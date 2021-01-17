@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -33,7 +32,7 @@ from helpers import (unittest, with_config, skipOnTravis, LuigiTestCase,
 import luigi.notifications
 import luigi.task_register
 import luigi.worker
-import mock
+from unittest import mock
 from luigi import ExternalTask, RemoteScheduler, Task, Event
 from luigi.mock import MockTarget, MockFileSystem
 from luigi.scheduler import Scheduler
@@ -48,7 +47,7 @@ luigi.notifications.DEBUG = True
 class DummyTask(Task):
 
     def __init__(self, *args, **kwargs):
-        super(DummyTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.has_run = False
 
     def complete(self):
@@ -128,7 +127,7 @@ class WorkerTest(LuigiTestCase):
         with Worker(scheduler=self.sch, worker_id='X') as w, Worker(scheduler=self.sch, worker_id='Y') as w2:
             self.w = w
             self.w2 = w2
-            super(WorkerTest, self).run(result)
+            super().run(result)
 
         if time.time != self.time:
             time.time = self.time
@@ -392,7 +391,7 @@ class WorkerTest(LuigiTestCase):
             i = luigi.IntParameter()
 
             def __init__(self, *args, **kwargs):
-                super(A, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
                 self.complete_count = 0
                 self.has_run = False
 
@@ -570,7 +569,7 @@ class WorkerTest(LuigiTestCase):
             def run(self):
                 logging.debug('running A')
                 time.sleep(0.1)
-                super(A, self).run()
+                super().run()
 
         a = A()
 
@@ -581,7 +580,7 @@ class WorkerTest(LuigiTestCase):
 
             def run(self):
                 logging.debug('running B')
-                super(B, self).run()
+                super().run()
 
         b = B()
 
@@ -604,7 +603,7 @@ class WorkerTest(LuigiTestCase):
             def run(self):
                 logging.debug('running A')
                 time.sleep(0.1)
-                super(A, self).run()
+                super().run()
 
         a = A()
 
@@ -615,7 +614,7 @@ class WorkerTest(LuigiTestCase):
 
             def run(self):
                 logging.debug('running B')
-                super(B, self).run()
+                super().run()
 
         b = B()
 
@@ -855,7 +854,7 @@ class WorkerTest(LuigiTestCase):
 class WorkerKeepAliveTests(LuigiTestCase):
     def setUp(self):
         self.sch = Scheduler()
-        super(WorkerKeepAliveTests, self).setUp()
+        super().setUp()
 
     def _worker_keep_alive_test(self, first_should_live, second_should_live, task_status=None, **worker_args):
         worker_args.update({
@@ -1145,10 +1144,10 @@ def custom_email_patch(config):
 class WorkerEmailTest(LuigiTestCase):
 
     def run(self, result=None):
-        super(WorkerEmailTest, self).setUp()
+        super().setUp()
         sch = Scheduler(retry_delay=100, remove_delay=1000, worker_disconnect_delay=10)
         with Worker(scheduler=sch, worker_id="foo") as self.worker:
-            super(WorkerEmailTest, self).run(result)
+            super().run(result)
 
     @email_patch
     def test_connection_error(self, emails):
@@ -1386,7 +1385,7 @@ class WorkerEmailTest(LuigiTestCase):
         luigi.build([a], workers=2, local_scheduler=True)
         self.assertEqual(1, len(emails))
         subject, body = self.read_email(emails[0])
-        self.assertIn("Luigi: {} FAILED".format(a), subject)
+        self.assertIn(f"Luigi: {a} FAILED", subject)
         self.assertIn("died unexpectedly with exit code -9", body)
 
     @with_config({'worker': {'send_failure_email': 'False'}})
@@ -1630,7 +1629,7 @@ class AssistantTest(unittest.TestCase):
         self.assistant = Worker(scheduler=self.sch, worker_id='Y', assistant=True)
         with Worker(scheduler=self.sch, worker_id='X') as w:
             self.w = w
-            super(AssistantTest, self).run(result)
+            super().run(result)
 
     def test_get_work(self):
         d = Dummy2Task('123')
@@ -1866,7 +1865,7 @@ class WorkerPurgeEventHandlerTest(unittest.TestCase):
 
 class PerTaskRetryPolicyBehaviorTest(LuigiTestCase):
     def setUp(self):
-        super(PerTaskRetryPolicyBehaviorTest, self).setUp()
+        super().setUp()
         self.per_task_retry_count = 3
         self.default_retry_count = 1
         self.sch = Scheduler(retry_delay=0.1, retry_count=self.default_retry_count, prune_on_get_work=True)
@@ -2066,7 +2065,7 @@ class PerTaskRetryPolicyBehaviorTest(LuigiTestCase):
                 return [s1]
 
             def run(self):
-                super(TestWrapperTask, self).run()
+                super().run()
                 yield e2, e1
 
         wt = TestWrapperTask()
@@ -2114,7 +2113,7 @@ class PerTaskRetryPolicyBehaviorTest(LuigiTestCase):
                 return [s1]
 
             def run(self):
-                super(TestWrapperTask, self).run()
+                super().run()
                 yield e2, e1
 
         wt = TestWrapperTask()

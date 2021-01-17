@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -88,11 +87,11 @@ def daemonize(cmd, pidfile=None, logdir=None, api_port=8082, address=None, unix_
     today = datetime.date.today()
     stdout_path = os.path.join(
         logdir,
-        "luigi-server-{0:%Y-%m-%d}.out".format(today)
+        f"luigi-server-{today:%Y-%m-%d}.out"
     )
     stderr_path = os.path.join(
         logdir,
-        "luigi-server-{0:%Y-%m-%d}.err".format(today)
+        f"luigi-server-{today:%Y-%m-%d}.err"
     )
     stdout_proxy = open(stdout_path, 'a+')
     stderr_proxy = open(stderr_path, 'a+')

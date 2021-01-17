@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -21,7 +20,7 @@ import luigi
 from luigi import Event, Task, build
 from luigi.mock import MockTarget, MockFileSystem
 from luigi.task import flatten
-from mock import patch
+from unittest.mock import patch
 
 
 class DummyException(Exception):

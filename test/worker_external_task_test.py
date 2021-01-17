@@ -18,7 +18,7 @@ from luigi.scheduler import Scheduler
 import luigi.server
 import luigi.worker
 import luigi.task
-from mock import patch
+from unittest.mock import patch
 from helpers import with_config, unittest
 import os
 import tempfile
@@ -31,7 +31,7 @@ class TestExternalFileTask(luigi.ExternalTask):
     times_to_call = luigi.IntParameter()
 
     def __init__(self, *args, **kwargs):
-        super(TestExternalFileTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.times_called = 0
 
     def complete(self):
@@ -57,7 +57,7 @@ class TestTask(luigi.Task):
     complete_after = luigi.IntParameter()
 
     def __init__(self, *args, **kwargs):
-        super(TestTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.output_path = os.path.join(self.tempdir, "test.output")
         self.dep_path = os.path.join(self.tempdir, "test.dep")
         self.dependency = TestExternalFileTask(path=self.dep_path,

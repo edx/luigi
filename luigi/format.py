@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -156,8 +155,7 @@ class InputPipeProcessWrapper(object):
             return getattr(self._input_pipe, name)
 
     def __iter__(self):
-        for line in self._process.stdout:
-            yield line
+        yield from self._process.stdout
         self._finish()
 
     def readable(self):
@@ -251,7 +249,7 @@ class BaseWrapper(object):
     def __init__(self, stream, *args, **kwargs):
         self._stream = stream
         try:
-            super(BaseWrapper, self).__init__(stream, *args, **kwargs)
+            super().__init__(stream, *args, **kwargs)
         except TypeError:
             pass
 
@@ -269,8 +267,7 @@ class BaseWrapper(object):
 
     def __iter__(self):
         try:
-            for line in self._stream:
-                yield line
+            yield from self._stream
         finally:
             self.close()
 
@@ -285,7 +282,7 @@ class NewlineWrapper(BaseWrapper):
 
         if self.newline not in (b'', b'\r\n', b'\n', b'\r', None):
             raise ValueError("newline need to be one of {b'', b'\r\n', b'\n', b'\r', None}")
-        super(NewlineWrapper, self).__init__(stream)
+        super().__init__(stream)
 
     def read(self, n=-1):
         b = self._stream.read(n)
@@ -305,7 +302,7 @@ class NewlineWrapper(BaseWrapper):
             newline = self.newline
 
         self._stream.writelines(
-            (re.sub(b'(\n|\r\n|\r)', newline, line) for line in lines)
+            re.sub(b'(\n|\r\n|\r)', newline, line) for line in lines
         )
 
     def write(self, b):
@@ -325,13 +322,13 @@ class MixedUnicodeBytesWrapper(BaseWrapper):
         if encoding is None:
             encoding = locale.getpreferredencoding()
         self.encoding = encoding
-        super(MixedUnicodeBytesWrapper, self).__init__(stream)
+        super().__init__(stream)
 
     def write(self, b):
         self._stream.write(self._convert(b))
 
     def writelines(self, lines):
-        self._stream.writelines((self._convert(line) for line in lines))
+        self._stream.writelines(self._convert(line) for line in lines)
 
     def _convert(self, b):
         if isinstance(b, six.text_type):
@@ -402,14 +399,14 @@ class TextWrapper(io.TextIOWrapper):
     def __exit__(self, *args):
         # io.TextIOWrapper close the file on __exit__, let the underlying file decide
         if not self.closed and self.writable():
-            super(TextWrapper, self).flush()
+            super().flush()
 
         self._stream.__exit__(*args)
 
     def __del__(self, *args):
         # io.TextIOWrapper close the file on __del__, let the underlying file decide
         if not self.closed and self.writable():
-            super(TextWrapper, self).flush()
+            super().flush()
 
         try:
             self._stream.__del__(*args)
@@ -419,7 +416,7 @@ class TextWrapper(io.TextIOWrapper):
     def __init__(self, stream, *args, **kwargs):
         self._stream = stream
         try:
-            super(TextWrapper, self).__init__(stream, *args, **kwargs)
+            super().__init__(stream, *args, **kwargs)
         except TypeError:
             pass
 

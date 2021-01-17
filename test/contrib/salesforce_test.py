@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2016 Simply Measured
 #
@@ -23,7 +22,7 @@ Unit test for the Salesforce contrib package
 from luigi.contrib.salesforce import SalesforceAPI, QuerySalesforce
 
 from helpers import unittest
-import mock
+from unittest import mock
 from luigi.mock import MockTarget
 from luigi.six import PY3
 import re

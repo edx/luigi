@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -129,7 +128,7 @@ class MySQLDbTaskHistoryTest(unittest.TestCase):
         try:
             print(from_utc(str(last_event.ts)))
         except ValueError:
-            self.fail("Failed to convert timestamp {} to UTC".format(last_event.ts))
+            self.fail(f"Failed to convert timestamp {last_event.ts} to UTC")
 
     def run_task(self, task):
         task2 = luigi.scheduler.Task(task.task_id, PENDING, [],

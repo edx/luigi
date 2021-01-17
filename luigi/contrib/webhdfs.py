@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -40,7 +39,7 @@ class WebHdfsTarget(FileSystemTarget):
     fs = None
 
     def __init__(self, path, client=None, format=None):
-        super(WebHdfsTarget, self).__init__(path)
+        super().__init__(path)
         path = self.path
         self.fs = client or WebHdfsClient()
         if format is None:
@@ -106,7 +105,7 @@ class AtomicWebHdfsFile(AtomicLocalFile):
 
     def __init__(self, path, client):
         self.client = client
-        super(AtomicWebHdfsFile, self).__init__(path)
+        super().__init__(path)
 
     def move_to_final_destination(self):
         if not self.client.exists(self.path):

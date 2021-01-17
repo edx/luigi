@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Twitter Inc
 #
@@ -49,7 +48,7 @@ def bucket_url(suffix):
     """
     Actually it's bucket + test folder name
     """
-    return 'gs://{}/{}/{}'.format(BUCKET_NAME, TEST_FOLDER, suffix)
+    return f'gs://{BUCKET_NAME}/{TEST_FOLDER}/{suffix}'
 
 
 class _GCSBaseTestCase(unittest.TestCase):

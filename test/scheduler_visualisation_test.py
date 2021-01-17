@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -137,15 +136,15 @@ class SchedulerVisualisationTest(unittest.TestCase):
         self.assertEqual(len(graph), 2)
         self.assertTrue(DummyTask(task_id=1).task_id in graph)
         d1 = graph[DummyTask(task_id=1).task_id]
-        self.assertEqual(d1[u'status'], u'DONE')
-        self.assertEqual(d1[u'deps'], [])
-        self.assertGreaterEqual(d1[u'start_time'], start)
-        self.assertLessEqual(d1[u'start_time'], end)
+        self.assertEqual(d1['status'], 'DONE')
+        self.assertEqual(d1['deps'], [])
+        self.assertGreaterEqual(d1['start_time'], start)
+        self.assertLessEqual(d1['start_time'], end)
         d2 = graph[DummyTask(task_id=2).task_id]
-        self.assertEqual(d2[u'status'], u'DONE')
-        self.assertEqual(d2[u'deps'], [])
-        self.assertGreaterEqual(d2[u'start_time'], start)
-        self.assertLessEqual(d2[u'start_time'], end)
+        self.assertEqual(d2['status'], 'DONE')
+        self.assertEqual(d2['deps'], [])
+        self.assertGreaterEqual(d2['start_time'], start)
+        self.assertLessEqual(d2['start_time'], end)
 
     def test_large_graph_truncate(self):
         class LinearTask(luigi.Task):
@@ -232,11 +231,11 @@ class SchedulerVisualisationTest(unittest.TestCase):
         six.assertCountEqual(self, expected_nodes, graph)
 
     def _assert_all_done(self, tasks):
-        self._assert_all(tasks, u'DONE')
+        self._assert_all(tasks, 'DONE')
 
     def _assert_all(self, tasks, status):
         for task in tasks.values():
-            self.assertEqual(task[u'status'], status)
+            self.assertEqual(task['status'], status)
 
     def test_dep_graph_single(self):
         self._build([FactorTask(1)])
@@ -247,7 +246,7 @@ class SchedulerVisualisationTest(unittest.TestCase):
 
         d1 = dep_graph.get(FactorTask(product=1).task_id)
         self.assertEqual(type(d1), type({}))
-        self.assertEqual(d1[u'deps'], [])
+        self.assertEqual(d1['deps'], [])
 
     def test_dep_graph_not_found(self):
         self._build([FactorTask(1)])
@@ -269,19 +268,19 @@ class SchedulerVisualisationTest(unittest.TestCase):
         self._assert_all_done(dep_graph)
 
         d30 = dep_graph[FactorTask(product=30).task_id]
-        self.assertEqual(sorted(d30[u'deps']), sorted([FactorTask(product=15).task_id, FactorTask(product=2).task_id]))
+        self.assertEqual(sorted(d30['deps']), sorted([FactorTask(product=15).task_id, FactorTask(product=2).task_id]))
 
         d2 = dep_graph[FactorTask(product=2).task_id]
-        self.assertEqual(sorted(d2[u'deps']), [])
+        self.assertEqual(sorted(d2['deps']), [])
 
         d15 = dep_graph[FactorTask(product=15).task_id]
-        self.assertEqual(sorted(d15[u'deps']), sorted([FactorTask(product=3).task_id, FactorTask(product=5).task_id]))
+        self.assertEqual(sorted(d15['deps']), sorted([FactorTask(product=3).task_id, FactorTask(product=5).task_id]))
 
         d3 = dep_graph[FactorTask(product=3).task_id]
-        self.assertEqual(sorted(d3[u'deps']), [])
+        self.assertEqual(sorted(d3['deps']), [])
 
         d5 = dep_graph[FactorTask(product=5).task_id]
-        self.assertEqual(sorted(d5[u'deps']), [])
+        self.assertEqual(sorted(d5['deps']), [])
 
     def test_dep_graph_missing_deps(self):
         self._build([BadReqTask(True)])
@@ -289,12 +288,12 @@ class SchedulerVisualisationTest(unittest.TestCase):
         self.assertEqual(len(dep_graph), 2)
 
         suc = dep_graph[BadReqTask(succeed=True).task_id]
-        self.assertEqual(suc[u'deps'], [BadReqTask(succeed=False).task_id])
+        self.assertEqual(suc['deps'], [BadReqTask(succeed=False).task_id])
 
         fail = dep_graph[BadReqTask(succeed=False).task_id]
-        self.assertEqual(fail[u'name'], 'BadReqTask')
-        self.assertEqual(fail[u'params'], {'succeed': 'False'})
-        self.assertEqual(fail[u'status'], 'UNKNOWN')
+        self.assertEqual(fail['name'], 'BadReqTask')
+        self.assertEqual(fail['params'], {'succeed': 'False'})
+        self.assertEqual(fail['status'], 'UNKNOWN')
 
     def test_dep_graph_diamond(self):
         self._build([FactorTask(12)])
@@ -304,16 +303,16 @@ class SchedulerVisualisationTest(unittest.TestCase):
         self._assert_all_done(dep_graph)
 
         d12 = dep_graph[FactorTask(product=12).task_id]
-        self.assertEqual(sorted(d12[u'deps']), sorted([FactorTask(product=2).task_id, FactorTask(product=6).task_id]))
+        self.assertEqual(sorted(d12['deps']), sorted([FactorTask(product=2).task_id, FactorTask(product=6).task_id]))
 
         d6 = dep_graph[FactorTask(product=6).task_id]
-        self.assertEqual(sorted(d6[u'deps']), sorted([FactorTask(product=2).task_id, FactorTask(product=3).task_id]))
+        self.assertEqual(sorted(d6['deps']), sorted([FactorTask(product=2).task_id, FactorTask(product=3).task_id]))
 
         d3 = dep_graph[FactorTask(product=3).task_id]
-        self.assertEqual(sorted(d3[u'deps']), [])
+        self.assertEqual(sorted(d3['deps']), [])
 
         d2 = dep_graph[FactorTask(product=2).task_id]
-        self.assertEqual(sorted(d2[u'deps']), [])
+        self.assertEqual(sorted(d2['deps']), [])
 
     def test_dep_graph_skip_done(self):
         task = OddFibTask(9)
@@ -380,7 +379,7 @@ class SchedulerVisualisationTest(unittest.TestCase):
         self.assertEqual(len(failed), 1)
 
         f8 = failed.get(FailingTask(task_id=8).task_id)
-        self.assertEqual(f8[u'status'], u'FAILED')
+        self.assertEqual(f8['status'], 'FAILED')
 
         self.assertEqual(remote.task_list('DONE', ''), {})
         self.assertEqual(remote.task_list('PENDING', ''), {})

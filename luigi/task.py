@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -340,7 +339,7 @@ class Task(object):
         if not cls.get_task_namespace():
             return cls.__name__
         else:
-            return "{}.{}".format(cls.get_task_namespace(), cls.__name__)
+            return f"{cls.get_task_namespace()}.{cls.__name__}"
 
     @classmethod
     def get_params(cls):

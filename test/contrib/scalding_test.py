@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -18,7 +17,7 @@
 import luigi
 from luigi.contrib import scalding
 
-import mock
+from unittest import mock
 import os
 import random
 import shutil

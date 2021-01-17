@@ -4,11 +4,10 @@ import argparse
 import json
 from collections import defaultdict
 
-from luigi import six
-from luigi.six.moves.urllib.request import urlopen
+from urllib.request import urlopen
 
 
-class LuigiGrep(object):
+class LuigiGrep:
 
     def __init__(self, host, port):
         self._host = host
@@ -16,7 +15,7 @@ class LuigiGrep(object):
 
     @property
     def graph_url(self):
-        return "http://{0}:{1}/api/graph".format(self._host, self._port)
+        return f"http://{self._host}:{self._port}/api/graph"
 
     def _fetch_json(self):
         """Returns the json representation of the dep graph"""
@@ -36,7 +35,7 @@ class LuigiGrep(object):
         return {"name": job, "status": job_info['status'], "deps_by_status": deps_status}
 
     def prefix_search(self, job_name_prefix):
-        """searches for jobs matching the given job_name_prefix."""
+        """Searches for jobs matching the given ``job_name_prefix``."""
         json = self._fetch_json()
         jobs = json['response']
         for job in jobs:
@@ -44,7 +43,7 @@ class LuigiGrep(object):
                 yield self._build_results(jobs, job)
 
     def status_search(self, status):
-        """searches for jobs matching the given status"""
+        """Searches for jobs matching the given ``status``."""
         json = self._fetch_json()
         jobs = json['response']
         for job in jobs:
@@ -74,10 +73,10 @@ def main():
 
     for job in results:
         print("{name}: {status}, Dependencies:".format(name=job['name'], status=job['status']))
-        for (status, jobs) in six.iteritems(job['deps_by_status']):
-            print("  status={status}".format(status=status))
+        for status, jobs in job['deps_by_status'].items():
+            print(f"  status={status}")
             for job in jobs:
-                print("    {job}".format(job=job))
+                print(f"    {job}")
 
 
 if __name__ == '__main__':

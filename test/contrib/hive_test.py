@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -17,22 +16,25 @@
 
 from collections import OrderedDict
 import os
+import sys
 import tempfile
 from helpers import unittest
 
-from luigi import six
 import luigi.contrib.hive
-import mock
+from unittest import mock
 from luigi import LocalTarget
 
+from nose.plugins.attrib import attr
 
+
+@attr('apache')
 class HiveTest(unittest.TestCase):
     count = 0
 
     def mock_hive_cmd(self, args, check_return=True):
         self.last_hive_cmd = args
         self.count += 1
-        return "statement{0}".format(self.count)
+        return f'statement{self.count}'
 
     def setUp(self):
         self.run_hive_cmd_saved = luigi.contrib.hive.run_hive
@@ -45,11 +47,12 @@ class HiveTest(unittest.TestCase):
         pre_count = self.count
         res = luigi.contrib.hive.run_hive_cmd("foo")
         self.assertEqual(["-e", "foo"], self.last_hive_cmd)
-        self.assertEqual("statement{0}".format(pre_count + 1), res)
+        self.assertEqual("statement{}".format(pre_count + 1), res)
 
     def test_run_hive_script_not_exists(self):
         def test():
             luigi.contrib.hive.run_hive_script("/tmp/some-non-existant-file______")
+
         self.assertRaises(RuntimeError, test)
 
     def test_run_hive_script_exists(self):
@@ -57,12 +60,12 @@ class HiveTest(unittest.TestCase):
             pre_count = self.count
             res = luigi.contrib.hive.run_hive_script(f.name)
             self.assertEqual(["-f", f.name], self.last_hive_cmd)
-            self.assertEqual("statement{0}".format(pre_count + 1), res)
+            self.assertEqual("statement{}".format(pre_count + 1), res)
 
     def test_create_parent_dirs(self):
         dirname = "/tmp/hive_task_test_dir"
 
-        class FooHiveTask(object):
+        class FooHiveTask:
 
             def output(self):
                 return LocalTarget(os.path.join(dirname, "foo"))
@@ -72,8 +75,8 @@ class HiveTest(unittest.TestCase):
         self.assertTrue(os.path.exists(dirname))
 
 
+@attr('apache')
 class HiveCommandClientTest(unittest.TestCase):
-
     """Note that some of these tests are really for the CDH releases of Hive, to which I do not currently have access.
     Hopefully there are no significant differences in the expected output"""
 
@@ -257,12 +260,16 @@ class HiveCommandClientTest(unittest.TestCase):
         client = luigi.contrib.hive.get_default_client()
         self.assertEqual(luigi.contrib.hive.MetastoreClient, type(client))
 
+        hive_syntax.get_config.return_value.get.return_value = "warehouse"
+        client = luigi.contrib.hive.get_default_client()
+        self.assertEqual(luigi.contrib.hive.WarehouseHiveClient, type(client))
+
     @mock.patch('subprocess.Popen')
     def test_run_hive_command(self, popen):
         # I'm testing this again to check the return codes
         # I didn't want to tear up all the existing tests to change how run_hive is mocked
         comm = mock.Mock(name='communicate_mock')
-        comm.return_value = "some return stuff", ""
+        comm.return_value = b'some return stuff', ''
 
         preturn = mock.Mock(name='open_mock')
         preturn.returncode = 0
@@ -275,9 +282,123 @@ class HiveCommandClientTest(unittest.TestCase):
         preturn.returncode = 17
         self.assertRaises(luigi.contrib.hive.HiveCommandError, luigi.contrib.hive.run_hive, ["blah", "blah"])
 
-        comm.return_value = "", "some stderr stuff"
+        comm.return_value = b'', 'some stderr stuff'
         returned = luigi.contrib.hive.run_hive(["blah", "blah"], False)
         self.assertEqual("", returned)
+
+
+class WarehouseHiveClientTest(unittest.TestCase):
+    def test_table_exists_files_actually_exist(self):
+        # arrange
+        hdfs_client = mock.Mock(name='hdfs_client')
+        hdfs_client.exists.return_value = True
+        hdfs_client.listdir.return_value = [
+            '00000_0',
+            '00000_1',
+            '00000_2',
+            '.tmp/'
+        ]
+
+        warehouse_hive_client = luigi.contrib.hive.WarehouseHiveClient(
+            hdfs_client=hdfs_client,
+            warehouse_location='/apps/hive/warehouse'
+        )
+
+        # act
+        exists = warehouse_hive_client.table_exists(
+            database='some_db',
+            table='table_name',
+            partition=OrderedDict(a=1, b=2)
+        )
+
+        # assert
+        assert exists
+        hdfs_client.exists.assert_called_once_with('/apps/hive/warehouse/some_db.db/table_name/a=1/b=2')
+
+    @mock.patch("luigi.configuration")
+    def test_table_exists_without_partition_spec_files_actually_exist(self, warehouse_location):
+        # arrange
+        warehouse_location.get_config.return_value.get.return_value = '/apps/hive/warehouse'
+        hdfs_client = mock.Mock(name='hdfs_client')
+        hdfs_client.exists.return_value = True
+        hdfs_client.listdir.return_value = [
+            '00000_0',
+            '00000_1',
+            '00000_2',
+            '.tmp/'
+        ]
+
+        warehouse_hive_client = luigi.contrib.hive.WarehouseHiveClient(
+            hdfs_client=hdfs_client,
+        )
+
+        # act
+        exists = warehouse_hive_client.table_exists(
+            database='some_db',
+            table='table_name',
+        )
+
+        # assert
+        assert exists
+        hdfs_client.exists.assert_called_once_with('/apps/hive/warehouse/some_db.db/table_name/')
+        hdfs_client.listdir.assert_called_once_with('/apps/hive/warehouse/some_db.db/table_name/')
+
+    @mock.patch("luigi.configuration")
+    def test_table_exists_only_tmp_files_exist(self, ignored_file_masks):
+        # arrange
+        ignored_file_masks.get_config.return_value.get.return_value = r"(\.tmp.*)"
+        hdfs_client = mock.Mock(name='hdfs_client')
+        hdfs_client.exists.return_value = True
+        hdfs_client.listdir.return_value = [
+            '.tmp/'
+        ]
+
+        warehouse_hive_client = luigi.contrib.hive.WarehouseHiveClient(
+            hdfs_client=hdfs_client,
+            warehouse_location='/apps/hive/warehouse'
+        )
+
+        # act
+        exists = warehouse_hive_client.table_exists(
+            database='some_db',
+            table='table_name',
+            partition={'a': 1}
+        )
+
+        # assert
+        assert not exists
+        hdfs_client.exists.assert_called_once_with('/apps/hive/warehouse/some_db.db/table_name/a=1')
+        hdfs_client.listdir.assert_called_once_with('/apps/hive/warehouse/some_db.db/table_name/a=1')
+
+    @mock.patch("luigi.configuration")
+    def test_table_exists_ambiguous_partition(self, ignored_file_masks):
+        # arrange
+        ignored_file_masks.get_config.return_value.get.return_value = r"(\.tmp.*)"
+        hdfs_client = mock.Mock(name='hdfs_client')
+        hdfs_client.exists.return_value = True
+        hdfs_client.listdir.return_value = [
+            '.tmp/'
+        ]
+        warehouse_hive_client = luigi.contrib.hive.WarehouseHiveClient(
+            hdfs_client=hdfs_client,
+            warehouse_location='/apps/hive/warehouse'
+        )
+
+        def _call_exists():
+            return warehouse_hive_client.table_exists(
+                database='some_db',
+                table='table_name',
+                partition={'a': 1, 'b': 2}
+            )
+
+        # act & assert
+        if sys.version_info >= (3, 7):
+            exists = _call_exists()
+            assert not exists
+            hdfs_client.exists.assert_called_once_with('/apps/hive/warehouse/some_db.db/table_name/a=1/b=2')
+            hdfs_client.listdir.assert_called_once_with('/apps/hive/warehouse/some_db.db/table_name/a=1/b=2')
+        else:
+            self.assertRaises(ValueError, _call_exists)
 
 
 class MyHiveTask(luigi.contrib.hive.HiveQueryTask):
@@ -287,6 +408,7 @@ class MyHiveTask(luigi.contrib.hive.HiveQueryTask):
         return 'banana banana %s' % self.param
 
 
+@attr('apache')
 class TestHiveTask(unittest.TestCase):
     task_class = MyHiveTask
 
@@ -318,27 +440,61 @@ class TestHiveTaskArgs(TestHiveTask):
         f_idx = arglist.index('-f')
         self.assertEqual(arglist[f_idx + 1], f_name)
 
-        hivevars = ['{}={}'.format(k, v) for k, v in six.iteritems(task.hivevars())]
+        hivevars = [f'{k}={v}' for k, v in task.hivevars().items()]
         for var in hivevars:
             idx = arglist.index(var)
             self.assertEqual(arglist[idx - 1], '--hivevar')
 
-        hiveconfs = ['{}={}'.format(k, v) for k, v in six.iteritems(task.hiveconfs())]
+        hiveconfs = [f'{k}={v}' for k, v in task.hiveconfs().items()]
         for conf in hiveconfs:
             idx = arglist.index(conf)
             self.assertEqual(arglist[idx - 1], '--hiveconf')
 
 
+@attr('apache')
 class TestHiveTarget(unittest.TestCase):
 
     def test_hive_table_target(self):
         client = mock.Mock()
         target = luigi.contrib.hive.HiveTableTarget(database='db', table='foo', client=client)
         target.exists()
-        client.table_exists.assert_called_with('foo', 'db')
+        client.table_exists.assert_called_with('foo', 'db', None)
 
     def test_hive_partition_target(self):
         client = mock.Mock()
         target = luigi.contrib.hive.HivePartitionTarget(database='db', table='foo', partition='bar', client=client)
         target.exists()
         client.table_exists.assert_called_with('foo', 'db', 'bar')
+
+
+class ExternalHiveTaskTest(unittest.TestCase):
+    def test_table(self):
+        # arrange
+        class _Task(luigi.contrib.hive.ExternalHiveTask):
+            database = 'schema1'
+            table = 'table1'
+
+        # act
+        output = _Task().output()
+
+        # assert
+        assert isinstance(output, luigi.contrib.hive.HivePartitionTarget)
+        assert output.database == 'schema1'
+        assert output.table == 'table1'
+        assert output.partition == {}
+
+    def test_partition_exists(self):
+        # arrange
+        class _Task(luigi.contrib.hive.ExternalHiveTask):
+            database = 'schema2'
+            table = 'table2'
+            partition = {'a': 1}
+
+        # act
+        output = _Task().output()
+
+        # assert
+        assert isinstance(output, luigi.contrib.hive.HivePartitionTarget)
+        assert output.database == 'schema2'
+        assert output.table == 'table2'
+        assert output.partition == {'a': 1}

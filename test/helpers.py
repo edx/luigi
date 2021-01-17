@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -128,7 +127,7 @@ class with_config(object):
 class RunOnceTask(luigi.Task):
 
     def __init__(self, *args, **kwargs):
-        super(RunOnceTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.comp = False
 
     def complete(self):
@@ -145,13 +144,13 @@ class LuigiTestCase(unittest.TestCase):
     Instance caches are cleared before and after all runs
     """
     def setUp(self):
-        super(LuigiTestCase, self).setUp()
+        super().setUp()
         self._stashed_reg = luigi.task_register.Register._get_reg()
         luigi.task_register.Register.clear_instance_cache()
 
     def tearDown(self):
         luigi.task_register.Register._set_reg(self._stashed_reg)
-        super(LuigiTestCase, self).tearDown()
+        super().tearDown()
         luigi.task_register.Register.clear_instance_cache()
 
     def run_locally(self, args):

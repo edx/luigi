@@ -1,7 +1,6 @@
-# coding=utf-8
 from smtplib import SMTPServerDisconnected
 
-import mock
+from unittest import mock
 import unittest
 
 import six
@@ -21,7 +20,7 @@ class BatchNotifier(luigi.batch_notifier.BatchNotifier):
     def __init__(self, **kwargs):
         full_args = BATCH_NOTIFIER_DEFAULTS.copy()
         full_args.update(kwargs)
-        super(BatchNotifier, self).__init__(**full_args)
+        super().__init__(**full_args)
 
 
 class BatchNotifierTest(unittest.TestCase):
@@ -308,9 +307,9 @@ class BatchNotifierTest(unittest.TestCase):
         bn = BatchNotifier(batch_mode='all', error_messages=100)
 
         for i in range(100):
-            bn.add_failure('Task(a=5)', 'Task', {'a': 5}, 'error {}'.format(i), [])
+            bn.add_failure('Task(a=5)', 'Task', {'a': 5}, f'error {i}', [])
             bn.add_disable('Task(a=5)', 'Task', {'a': 5}, [])
-            bn.add_scheduling_fail('Task(a=6)', 'Task', {'a': 6}, 'scheduling error {}'.format(i), [])
+            bn.add_scheduling_fail('Task(a=6)', 'Task', {'a': 6}, f'scheduling error {i}', [])
             bn.send_email()
             self.check_email_send(
                 'Luigi: 1 failure, 1 disable, 1 scheduling failure in the last 60 minutes',

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -192,7 +191,7 @@ class PigRunContext(object):
 
 class PigJobError(RuntimeError):
     def __init__(self, message, out=None, err=None):
-        super(PigJobError, self).__init__(message, out, err)
+        super().__init__(message, out, err)
         self.message = message
         self.out = out
         self.err = err

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -23,6 +22,7 @@ from collections import OrderedDict
 import re
 import csv
 import tempfile
+from urllib.parse import urlsplit
 
 import luigi
 from luigi import Task
@@ -33,11 +33,6 @@ try:
     import requests
 except ImportError:
     logger.warning("This module requires the python package 'requests'.")
-
-try:
-    from urlparse import urlsplit
-except ImportError:
-    from urllib.parse import urlsplit
 
 
 def get_soql_fields(soql):
@@ -64,7 +59,7 @@ def parse_results(fields, data):
 
     for record in data['records']:  # for each 'record' in response
         row = [None] * len(fields)  # create null list the length of number of columns
-        for obj, value in record.iteritems():  # for each obj in record
+        for obj, value in record.items():  # for each obj in record
             if not isinstance(value, (dict, list, tuple)):  # if not data structure
                 if obj in fields:
                     row[fields.index(obj)] = ensure_utf(value)
@@ -83,8 +78,8 @@ def _traverse_results(value, fields, row, path):
 
     Traverses through ordered dict and recursively calls itself when encountering a dictionary
     """
-    for f, v in value.iteritems():  # for each item in obj
-        field_name = '{path}.{name}'.format(path=path, name=f) if path else f
+    for f, v in value.items():  # for each item in obj
+        field_name = f'{path}.{f}' if path else f
 
         if not isinstance(v, (dict, list, tuple)):  # if not data structure
             if field_name in fields:
@@ -109,7 +104,8 @@ class salesforce(luigi.Config):
 
 
 class QuerySalesforce(Task):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def object_name(self):
         """
         Override to return the SF object we are querying.
@@ -130,7 +126,8 @@ class QuerySalesforce(Task):
         """Override to specify the sandbox name if it is intended to be used."""
         return None
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def soql(self):
         """Override to return the raw string SOQL or the path to it."""
         return None
@@ -164,7 +161,7 @@ class QuerySalesforce(Task):
         msg = ''
         try:
             if self.is_soql_file:
-                with open(self.soql, 'r') as infile:
+                with open(self.soql) as infile:
                     self.soql = infile.read()
 
             batch_id = sf.create_batch(job_id, self.soql, self.content_type)
@@ -217,7 +214,7 @@ class QuerySalesforce(Task):
 
         if self.content_type.lower() == 'csv':
             for i, result_id in enumerate(result_ids):
-                with open("%s.%d" % (self.output().path, i), 'r') as f:
+                with open("%s.%d" % (self.output().path, i)) as f:
                     header = f.readline()
                     if i == 0:
                         outfile.write(header)
@@ -229,7 +226,7 @@ class QuerySalesforce(Task):
         outfile.close()
 
 
-class SalesforceAPI(object):
+class SalesforceAPI:
     """
     Class used to interact with the SalesforceAPI.  Currently provides only the
     methods necessary for performing a bulk upload operation.
@@ -315,7 +312,7 @@ class SalesforceAPI(object):
         """
         if identifier_is_url:
             # Don't use `self.base_url` here because the full URI is provided
-            url = (u'https://{instance}{next_record_url}'
+            url = ('https://{instance}{next_record_url}'
                    .format(instance=self.hostname,
                            next_record_url=next_records_identifier))
         else:
@@ -365,9 +362,9 @@ class SalesforceAPI(object):
             writer.writerows(parse_results(fields, response))
             length += len(response['records'])
             if not length % 10000:
-                logger.info('Requested {0} lines...'.format(length))
+                logger.info(f'Requested {length} lines...')
 
-        logger.info('Requested a total of {0} lines.'.format(length))
+        logger.info(f'Requested a total of {length} lines.')
 
         tmp_file.seek(0)
         return tmp_file
