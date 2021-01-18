@@ -28,25 +28,36 @@ luigi_package_data = sum(map(get_static_files, ["luigi/static", "luigi/templates
 
 readme_note = """\
 .. note::
-
    For the latest source, discussion, etc, please visit the
    `GitHub repository <https://github.com/spotify/luigi>`_\n\n
 """
 
+
+def load_requirements(*requirements_paths):
+    """
+    Load all requirements from the specified requirements files.
+    Returns a list of requirement strings.
+    """
+    requirements = set()
+    for path in requirements_paths:
+        with open(path) as reqs:
+            requirements.update(
+                line.split('#')[0].strip() for line in reqs
+                if is_requirement(line.strip())
+            )
+    return list(requirements)
+
+
+def is_requirement(line):
+    """
+    Return True if the requirement line is a package requirement;
+    that is, it is not blank, a comment, a URL, or an included file.
+    """
+    return line and not line.startswith(('-r', '#', '-e', 'git+', '-c'))
+
+
 with open('README.rst') as fobj:
     long_description = readme_note + fobj.read()
-
-install_requires = [
-    'tornado>=4.0,<5',
-    'python-daemon<3.0',
-]
-
-if os.environ.get('READTHEDOCS', None) == 'True':
-    # So that we can build documentation for luigi.db_task_history and luigi.contrib.sqla
-    install_requires.append('sqlalchemy')
-    # readthedocs don't like python-daemon, see #1342
-    install_requires.remove('python-daemon<3.0')
-    install_requires.append('sphinx>=1.4.4')  # Value mirrored in doc/conf.py
 
 setup(
     name='luigi',
@@ -74,7 +85,8 @@ setup(
             'luigi-deps-tree = luigi.tools.deps_tree:main'
         ]
     },
-    install_requires=install_requires,
+    install_requires=load_requirements('requirements/base.in'),
+    extras_require=load_requirements('requirements/extra.in'),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Console',
@@ -82,10 +94,7 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'License :: OSI Approved :: Apache Software License',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.8',
         'Topic :: System :: Monitoring',
     ],
 )

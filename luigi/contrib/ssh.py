@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -54,7 +53,7 @@ logger = logging.getLogger('luigi-interface')
 
 class RemoteCalledProcessError(subprocess.CalledProcessError):
     def __init__(self, returncode, command, host, output=None):
-        super(RemoteCalledProcessError, self).__init__(returncode, command, output)
+        super().__init__(returncode, command, output)
         self.host = host
 
     def __str__(self):
@@ -62,7 +61,7 @@ class RemoteCalledProcessError(subprocess.CalledProcessError):
             self.cmd, self.host, self.returncode)
 
 
-class RemoteContext(object):
+class RemoteContext:
 
     def __init__(self, host, **kwargs):
         self.host = host
@@ -86,7 +85,7 @@ class RemoteContext(object):
 
     def _host_ref(self):
         if self.username:
-            return "{0}@{1}".format(self.username, self.host)
+            return f"{self.username}@{self.host}"
         else:
             return self.host
 
@@ -140,7 +139,7 @@ class RemoteContext(object):
         Remember to close() the returned "tunnel" object in order to clean up
         after yourself when you are done with the tunnel.
         """
-        tunnel_host = "{0}:{1}:{2}".format(local_port, remote_host, remote_port)
+        tunnel_host = f"{local_port}:{remote_host}:{remote_port}"
         proc = self.Popen(
             # cat so we can shut down gracefully by closing stdin
             ["-L", tunnel_host, "echo -n ready && cat"],
@@ -286,11 +285,11 @@ class AtomicRemoteFileWriter(luigi.format.OutputPipeProcessWrapper):
             self.fs.mkdir(folder)
 
         self.__tmp_path = self.path + '-luigi-tmp-%09d' % random.randrange(0, 1e10)
-        super(AtomicRemoteFileWriter, self).__init__(
+        super().__init__(
             self.fs.remote_context._prepare_cmd(['cat', '>', self.__tmp_path]))
 
     def __del__(self):
-        super(AtomicRemoteFileWriter, self).__del__()
+        super().__del__()
 
         try:
             if self.fs.exists(self.__tmp_path):
@@ -300,7 +299,7 @@ class AtomicRemoteFileWriter(luigi.format.OutputPipeProcessWrapper):
             logger.exception('Failed to delete in-flight file')
 
     def close(self):
-        super(AtomicRemoteFileWriter, self).close()
+        super().close()
         self.fs.remote_context.check_output(['mv', self.__tmp_path, self.path])
 
     @property
@@ -320,7 +319,7 @@ class RemoteTarget(luigi.target.FileSystemTarget):
     """
 
     def __init__(self, path, host, format=None, **kwargs):
-        super(RemoteTarget, self).__init__(path)
+        super().__init__(path)
         if format is None:
             format = luigi.format.get_default_format()
         self.format = format

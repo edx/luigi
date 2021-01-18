@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -21,7 +20,7 @@ import tempfile
 import luigi
 from helpers import unittest
 from luigi.contrib.pig import PigJobError, PigJobTask
-from mock import patch
+from unittest.mock import patch
 
 
 class SimpleTestJob(PigJobTask):
@@ -172,7 +171,7 @@ def _get_fake_Popen(arglist_result, return_code, *args, **kwargs):
     def Popen_fake(arglist, shell=None, stdout=None, stderr=None, env=None, close_fds=True):
         arglist_result.append(arglist)
 
-        class P(object):
+        class P:
             number_of_process_polls = 5
 
             def __init__(self):

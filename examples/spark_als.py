@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -29,7 +28,7 @@ class UserItemMatrix(luigi.Task):
     data_size = luigi.IntParameter()
 
     def run(self):
-        """
+        r"""
         Generates :py:attr:`~.UserItemMatrix.data_size` elements.
         Writes this data in \ separated value format into the target :py:func:`~/.UserItemMatrix.output`.
 
@@ -43,7 +42,7 @@ class UserItemMatrix(luigi.Task):
         w = self.output().open('w')
         for user in range(self.data_size):
             track = int(random.random() * self.data_size)
-            w.write('%d\%d\%f' % (user, track, 1.0))
+            w.write(r'%d\%d\%f' % (user, track, 1.0))
         w.close()
 
     def output(self):

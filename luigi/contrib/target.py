@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -24,7 +23,7 @@ import luigi.target
 logger = logging.getLogger('luigi-interface')
 
 
-class CascadingClient(object):
+class CascadingClient:
     """
     A FilesystemClient that will cascade failing function calls through a list of clients.
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -201,11 +200,11 @@ class SparkSubmitTask(ExternalProgramTask):
         return [self.app] + self.app_options()
 
     def _list_config(self, config):
-        if config and isinstance(config, six.string_types):
+        if config and isinstance(config, str):
             return list(map(lambda x: x.strip(), config.split(',')))
 
     def _dict_config(self, config):
-        if config and isinstance(config, six.string_types):
+        if config and isinstance(config, str):
             return dict(map(lambda i: i.split('=', 1), config.split('|')))
 
     def _text_arg(self, name, value):
@@ -222,7 +221,7 @@ class SparkSubmitTask(ExternalProgramTask):
         command = []
         if value and isinstance(value, dict):
             for prop, value in value.items():
-                command += [name, '{0}={1}'.format(prop, value)]
+                command += [name, f'{prop}={value}']
         return command
 
     def _flag_arg(self, name, value):
@@ -295,7 +294,7 @@ class PySparkTask(SparkSubmitTask):
             shutil.copy(module_path, os.path.join(self.run_path, '.'))
             self._dump(fd)
         try:
-            super(PySparkTask, self).run()
+            super().run()
         finally:
             shutil.rmtree(self.run_path)
 

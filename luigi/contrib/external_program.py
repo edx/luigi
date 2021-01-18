@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2016 Spotify AB
 #
@@ -107,21 +106,21 @@ class ExternalProgramTask(luigi.Task):
             stderr = self._clean_output_file(tmp_stderr)
 
             if stdout:
-                logger.info('Program stdout:\n{}'.format(stdout))
+                logger.info(f'Program stdout:\n{stdout}')
             if stderr:
                 if self.always_log_stderr or not success:
-                    logger.info('Program stderr:\n{}'.format(stderr))
+                    logger.info(f'Program stderr:\n{stderr}')
 
             if not success:
                 raise ExternalProgramRunError(
-                    'Program failed with return code={}:'.format(proc.returncode),
+                    f'Program failed with return code={proc.returncode}:',
                     args, env=env, stdout=stdout, stderr=stderr)
         finally:
             tmp_stderr.close()
             tmp_stdout.close()
 
 
-class ExternalProgramRunContext(object):
+class ExternalProgramRunContext:
     def __init__(self, proc):
         self.proc = proc
 
@@ -144,7 +143,7 @@ class ExternalProgramRunContext(object):
 
 class ExternalProgramRunError(RuntimeError):
     def __init__(self, message, args, env=None, stdout=None, stderr=None):
-        super(ExternalProgramRunError, self).__init__(message, args, env, stdout, stderr)
+        super().__init__(message, args, env, stdout, stderr)
         self.message = message
         self.args = args
         self.env = env
@@ -158,7 +157,7 @@ class ExternalProgramRunError(RuntimeError):
         info += '\nSTDERR: {}'.format(self.err or '[empty]')
         env_string = None
         if self.env:
-            env_string = ' '.join(['='.join([k, '\'{}\''.format(v)]) for k, v in self.env.items()])
+            env_string = ' '.join(['='.join([k, f'\'{v}\'']) for k, v in self.env.items()])
         info += '\nENVIRONMENT: {}'.format(env_string or '[empty]')
         # reset terminal color in case the ENVIRONMENT changes colors
         info += '\033[m'
@@ -186,7 +185,7 @@ class ExternalPythonProgramTask(ExternalProgramTask):
                     'value to the ``PYTHONPATH`` environment variable.')
 
     def program_environment(self):
-        env = super(ExternalPythonProgramTask, self).program_environment()
+        env = super().program_environment()
 
         if self.extra_pythonpath:
             pythonpath = ':'.join([self.extra_pythonpath, env.get('PYTHONPATH', '')])
@@ -194,7 +193,7 @@ class ExternalPythonProgramTask(ExternalProgramTask):
 
         if self.virtualenv:
             # Make the same changes to the env that a normal venv/bin/activate script would
-            path = ':'.join(['{}/bin'.format(self.virtualenv), env.get('PATH', '')])
+            path = ':'.join([f'{self.virtualenv}/bin', env.get('PATH', '')])
             env.update({
                 'PATH': path,
                 'VIRTUAL_ENV': self.virtualenv

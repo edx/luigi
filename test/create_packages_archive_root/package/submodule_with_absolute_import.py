@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -15,6 +14,5 @@
 # limitations under the License.
 #
 
-from __future__ import absolute_import
 
 import os  # NOQA

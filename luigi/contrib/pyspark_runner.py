@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -26,7 +25,6 @@ other arguments are the ones returned by PySparkTask.app_options()
 
 """
 
-from __future__ import print_function
 
 try:
     import cPickle as pickle
@@ -40,7 +38,7 @@ import os
 sys.path.append(sys.path.pop(0))
 
 
-class PySparkRunner(object):
+class PySparkRunner:
 
     def __init__(self, job, *args):
         # Append job directory to PYTHON_PATH to enable dynamic import

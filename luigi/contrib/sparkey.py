@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -15,7 +14,6 @@
 # limitations under the License.
 #
 
-from __future__ import absolute_import
 
 import luigi
 
@@ -38,7 +36,7 @@ class SparkeyExportTask(luigi.Task):
     separator = '\t'
 
     def __init__(self, *args, **kwargs):
-        super(SparkeyExportTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def run(self):
         self._write_sparkey_file()

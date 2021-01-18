@@ -17,7 +17,7 @@ import luigi
 import luigi.contrib.postgres
 from luigi.tools.range import RangeDaily
 from helpers import unittest
-import mock
+from unittest import mock
 from nose.plugins.attrib import attr
 
 
@@ -31,7 +31,7 @@ class MockPostgresCursor(mock.Mock):
     Keeps state to simulate executing SELECT queries and fetching results.
     """
     def __init__(self, existing_update_ids):
-        super(MockPostgresCursor, self).__init__()
+        super().__init__()
         self.existing = existing_update_ids
 
     def execute(self, query, params):

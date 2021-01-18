@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -35,7 +34,7 @@ def skipOnTravis(reason):
     return unittest.skipIf(os.getenv('TRAVIS') == 'true', reason)
 
 
-class with_config(object):
+class with_config:
     """
     Decorator to override config settings for the length of a function.
 
@@ -114,9 +113,9 @@ class with_config(object):
             luigi.configuration.LuigiConfigParser._instance = new_conf
             orig_dict = {k: dict(orig_conf.items(k)) for k in orig_conf.sections()}
             new_dict = self._make_dict(orig_dict)
-            for (section, settings) in six.iteritems(new_dict):
+            for (section, settings) in new_dict.items():
                 new_conf.add_section(section)
-                for (name, value) in six.iteritems(settings):
+                for (name, value) in settings.items():
                     new_conf.set(section, name, value)
             try:
                 return fun(*args, **kwargs)
@@ -128,7 +127,7 @@ class with_config(object):
 class RunOnceTask(luigi.Task):
 
     def __init__(self, *args, **kwargs):
-        super(RunOnceTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.comp = False
 
     def complete(self):
@@ -145,13 +144,13 @@ class LuigiTestCase(unittest.TestCase):
     Instance caches are cleared before and after all runs
     """
     def setUp(self):
-        super(LuigiTestCase, self).setUp()
+        super().setUp()
         self._stashed_reg = luigi.task_register.Register._get_reg()
         luigi.task_register.Register.clear_instance_cache()
 
     def tearDown(self):
         luigi.task_register.Register._set_reg(self._stashed_reg)
-        super(LuigiTestCase, self).tearDown()
+        super().tearDown()
         luigi.task_register.Register.clear_instance_cache()
 
     def run_locally(self, args):
@@ -171,7 +170,7 @@ class LuigiTestCase(unittest.TestCase):
         return self.run_locally(space_seperated_args.split(' '))
 
 
-class parsing(object):
+class parsing:
     """
     Convenient decorator for test cases to set the parsing environment.
     """

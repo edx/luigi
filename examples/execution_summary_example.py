@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2015-2015 Spotify AB
 #
@@ -46,7 +45,6 @@ You can run this example like this:
 """
 
 
-from __future__ import print_function
 import datetime
 
 import luigi

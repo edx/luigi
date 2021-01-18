@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -19,7 +18,6 @@ Locking functionality when launching things from the command line.
 Uses a pidfile.
 This prevents multiple identical workflows to be launched simultaneously.
 """
-from __future__ import print_function
 
 import hashlib
 import os
@@ -64,18 +62,15 @@ def getpcmd(pid):
         # worked. See the pull request at
         # https://github.com/spotify/luigi/pull/1876
         try:
-            with open('/proc/{0}/cmdline'.format(pid), 'r') as fh:
-                if six.PY3:
-                    return fh.read().replace('\0', ' ').rstrip()
-                else:
-                    return fh.read().replace('\0', ' ').decode('utf8').rstrip()
-        except IOError:
+            with open(f'/proc/{pid}/cmdline') as fh:
+                return fh.read().replace('\0', ' ').rstrip()
+        except OSError:
             # the system may not allow reading the command line
             # of a process owned by another user
             pass
 
     # Fallback instead of None, for e.g. Cygwin where -o is an "unknown option" for the ps command:
-    return '[PROCESS_WITH_PID={}]'.format(pid)
+    return f'[PROCESS_WITH_PID={pid}]'
 
 
 def get_info(pid_dir, my_pid=None):
@@ -114,14 +109,14 @@ def acquire_for(pid_dir, num_available=1, kill_signal=None):
     if kill_signal is not None:
         for pid in pids:
             os.kill(pid, kill_signal)
-        print('Sent kill signal to Pids: {}'.format(pids))
+        print(f'Sent kill signal to Pids: {pids}')
         # We allow for the killer to progress, yet we don't want these to stack
         # up! So we only allow it once.
         num_available += 1
 
     if len(pids) >= num_available:
         # We are already running under a different pid
-        print('Pid(s) {} already running'.format(pids))
+        print(f'Pid(s) {pids} already running')
         if kill_signal is not None:
             print('Note: There have (probably) been 1 other "--take-lock"'
                   ' process which continued to run! Probably no need to run'
@@ -144,7 +139,7 @@ def _read_pids_file(pid_file):
     # If the file happen to not exist, simply return
     # an empty set()
     try:
-        with open(pid_file, 'r') as f:
+        with open(pid_file) as f:
             return {int(pid_str.strip()) for pid_str in f if pid_str.strip()}
     except FileNotFoundError:
         return set()
@@ -152,7 +147,7 @@ def _read_pids_file(pid_file):
 
 def _write_pids_file(pid_file, pids_set):
     with open(pid_file, 'w') as f:
-        f.writelines('{}\n'.format(pid) for pid in pids_set)
+        f.writelines(f'{pid}\n' for pid in pids_set)
 
     # Make the .pid-file writable by all (when the os allows for it)
     if os.name != 'nt':

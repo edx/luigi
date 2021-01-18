@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -64,11 +63,11 @@ def _urljoin(base, url):
 class RPCError(Exception):
 
     def __init__(self, message, sub_exception=None):
-        super(RPCError, self).__init__(message)
+        super().__init__(message)
         self.sub_exception = sub_exception
 
 
-class URLLibFetcher(object):
+class URLLibFetcher:
     raises = (URLError, socket.timeout)
 
     def fetch(self, full_url, body, timeout):
@@ -76,7 +75,7 @@ class URLLibFetcher(object):
         return urlopen(full_url, body, timeout).read().decode('utf-8')
 
 
-class RequestsFetcher(object):
+class RequestsFetcher:
     def __init__(self, session):
         from requests import exceptions as requests_exceptions
         self.raises = requests_exceptions.RequestException
@@ -97,7 +96,7 @@ class RequestsFetcher(object):
         return resp.text
 
 
-class RemoteScheduler(object):
+class RemoteScheduler:
     """
     Scheduler proxy object. Talks to a RemoteSchedulerResponder.
     """

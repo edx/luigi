@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -112,7 +111,7 @@ def rpc_method(**request_args):
             if not all(arg in actual_args for arg in required_args):
                 raise TypeError('{} takes {} arguments ({} given)'.format(
                     fn_name, len(all_args), len(actual_args)))
-            return self._request('/api/{}'.format(fn_name), actual_args, **request_args)
+            return self._request(f'/api/{fn_name}', actual_args, **request_args)
 
         RPC_METHODS[fn_name] = rpc_func
         return fn
@@ -151,7 +150,7 @@ class scheduler(Config):
         return RetryPolicy(self.retry_count, self.disable_hard_timeout, self.disable_window)
 
 
-class Failures(object):
+class Failures:
     """
     This class tracks the number of failures in a given time window.
 
@@ -273,7 +272,7 @@ class OrderedSet(collections.MutableSet):
         return set(self) == set(other)
 
 
-class Task(object):
+class Task:
     def __init__(self, task_id, status, deps, resources=None, priority=0, family='', module=None,
                  params=None, tracking_url=None, status_message=None, progress_percentage=None, retry_policy='notoptional'):
         self.id = task_id
@@ -335,11 +334,11 @@ class Task(object):
 
     @property
     def pretty_id(self):
-        param_str = ', '.join('{}={}'.format(key, value) for key, value in sorted(self.params.items()))
-        return '{}({})'.format(self.family, param_str)
+        param_str = ', '.join(f'{key}={value}' for key, value in sorted(self.params.items()))
+        return f'{self.family}({param_str})'
 
 
-class Worker(object):
+class Worker:
     """
     Structure for tracking worker activity and keeping their references.
     """
@@ -417,7 +416,7 @@ class Worker(object):
         return self.id
 
 
-class SimpleTaskState(object):
+class SimpleTaskState:
     """
     Keep track of the current state and handle persistance.
 
@@ -445,7 +444,7 @@ class SimpleTaskState(object):
         try:
             with open(self._state_path, 'wb') as fobj:
                 pickle.dump(self.get_state(), fobj)
-        except IOError:
+        except OSError:
             logger.warning("Failed saving scheduler state", exc_info=1)
         else:
             logger.info("Saved state in %s", self._state_path)
@@ -463,16 +462,16 @@ class SimpleTaskState(object):
 
             self.set_state(state)
             self._status_tasks = collections.defaultdict(dict)
-            for task in six.itervalues(self._tasks):
+            for task in self._tasks.values():
                 self._status_tasks[task.status][task.id] = task
         else:
             logger.info("No prior state file exists at %s. Starting with empty state", self._state_path)
 
     def get_active_tasks(self):
-        return six.itervalues(self._tasks)
+        return self._tasks.values()
 
     def get_active_tasks_by_status(self, *statuses):
-        return itertools.chain.from_iterable(six.itervalues(self._status_tasks[status]) for status in statuses)
+        return itertools.chain.from_iterable(self._status_tasks[status].values() for status in statuses)
 
     def get_active_task_count_for_status(self, status):
         if status:
@@ -555,7 +554,7 @@ class SimpleTaskState(object):
                 new_status = DISABLED
                 if not config.batch_emails:
                     notifications.send_error_email(
-                        'Luigi Scheduler: DISABLED {task} due to excessive failures'.format(task=task.id),
+                        f'Luigi Scheduler: DISABLED {task.id} due to excessive failures',
                         '{task} failed {failures} times in the last {window} seconds, so it is being '
                         'disabled for {persist} seconds'.format(
                             failures=task.retry_policy.retry_count,
@@ -617,7 +616,7 @@ class SimpleTaskState(object):
             self._status_tasks[task_obj.status].pop(task)
 
     def get_active_workers(self, last_active_lt=None, last_get_work_gt=None):
-        for worker in six.itervalues(self._active_workers):
+        for worker in self._active_workers.values():
             if last_active_lt is not None and worker.last_active >= last_active_lt:
                 continue
             last_get_work = worker.last_get_work
@@ -655,7 +654,7 @@ class SimpleTaskState(object):
             worker.tasks.clear()
 
 
-class Scheduler(object):
+class Scheduler:
     """
     Async scheduler that can handle multiple workers, etc.
 
@@ -853,7 +852,7 @@ class Scheduler(object):
             if batched_params:
                 unbatched_params = {
                     param: value
-                    for param, value in six.iteritems(task.params)
+                    for param, value in task.params.items()
                     if param not in batched_params
                 }
             else:
@@ -907,7 +906,7 @@ class Scheduler(object):
         if batched_params:
             unbatched_params = {
                 param: value
-                for param, value in six.iteritems(params)
+                for param, value in params.items()
                 if param not in batched_params
             }
         else:
@@ -953,7 +952,7 @@ class Scheduler(object):
 
     def _generate_retry_policy(self, task_retry_policy_dict):
         retry_policy_dict = self._config._get_retry_policy()._asdict()
-        retry_policy_dict.update({k: v for k, v in six.iteritems(task_retry_policy_dict) if v is not None})
+        retry_policy_dict.update({k: v for k, v in task_retry_policy_dict.items() if v is not None})
         return RetryPolicy(**retry_policy_dict)
 
     def _has_resources(self, needed_resources, used_resources):
@@ -961,7 +960,7 @@ class Scheduler(object):
             return True
 
         available_resources = self._resources or {}
-        for resource, amount in six.iteritems(needed_resources):
+        for resource, amount in needed_resources.items():
             if amount + used_resources[resource] > available_resources.get(resource, 1):
                 return False
         return True
@@ -971,7 +970,7 @@ class Scheduler(object):
         if self._resources is not None:
             for task in self._state.get_active_tasks_by_status(RUNNING):
                 if getattr(task, 'resources_running', task.resources):
-                    for resource, amount in six.iteritems(getattr(task, 'resources_running', task.resources)):
+                    for resource, amount in getattr(task, 'resources_running', task.resources).items():
                         used_resources[resource] += amount
         return used_resources
 
@@ -1102,8 +1101,8 @@ class Scheduler(object):
             used_resources = self._used_resources()
             activity_limit = time.time() - self._config.worker_disconnect_delay
             active_workers = self._state.get_active_workers(last_get_work_gt=activity_limit)
-            greedy_workers = dict((worker.id, worker.info.get('workers', 1))
-                                  for worker in active_workers)
+            greedy_workers = {worker.id: worker.info.get('workers', 1)
+                                  for worker in active_workers}
         tasks = list(relevant_tasks)
         tasks.sort(key=self._rank, reverse=True)
 
@@ -1120,7 +1119,7 @@ class Scheduler(object):
 
             if task.status == RUNNING and (task.worker_running in greedy_workers):
                 greedy_workers[task.worker_running] -= 1
-                for resource, amount in six.iteritems((getattr(task, 'resources_running', task.resources) or {})):
+                for resource, amount in (getattr(task, 'resources_running', task.resources) or {}).items():
                     greedy_resources[resource] += amount
 
             if self._schedulable(task) and self._has_resources(task.resources, greedy_resources):
@@ -1149,7 +1148,7 @@ class Scheduler(object):
                             greedy_workers[task_worker] -= 1
 
                             # keep track of the resources used in greedy scheduling
-                            for resource, amount in six.iteritems((task.resources or {})):
+                            for resource, amount in (task.resources or {}).items():
                                 greedy_resources[resource] += amount
 
                             break
@@ -1429,12 +1428,12 @@ class Scheduler(object):
                 name=resource,
                 num_total=r_dict['total'],
                 num_used=r_dict['used']
-            ) for resource, r_dict in six.iteritems(self.resources())]
+            ) for resource, r_dict in self.resources().items()]
         if self._resources is not None:
             consumers = collections.defaultdict(dict)
             for task in self._state.get_active_tasks_by_status(RUNNING):
                 if task.status == RUNNING and task.resources:
-                    for resource, amount in six.iteritems(task.resources):
+                    for resource, amount in task.resources.items():
                         consumers[resource][task.id] = self._serialize_task(task.id, include_deps=False)
             for resource in resources:
                 tasks = consumers[resource['name']]
@@ -1446,7 +1445,7 @@ class Scheduler(object):
         ''' get total resources and available ones '''
         used_resources = self._used_resources()
         ret = collections.defaultdict(dict)
-        for resource, total in six.iteritems(self._resources):
+        for resource, total in self._resources.items():
             ret[resource]['total'] = total
             if resource in used_resources:
                 ret[resource]['used'] = used_resources[resource]

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -72,7 +71,7 @@ class DuplicateParameterException(ParameterException):
     pass
 
 
-class Parameter(object):
+class Parameter:
     """
     Parameter whose value is a ``str``, and a base class for other parameter types.
 
@@ -257,8 +256,8 @@ class Parameter(object):
     def _warn_on_wrong_param_type(self, param_name, param_value):
         if self.__class__ != Parameter:
             return
-        if not isinstance(param_value, six.string_types):
-            warnings.warn('Parameter "{}" with value "{}" is not of type string.'.format(param_name, param_value))
+        if not isinstance(param_value, str):
+            warnings.warn(f'Parameter "{param_name}" with value "{param_value}" is not of type string.')
 
     def normalize(self, x):
         """
@@ -317,7 +316,7 @@ class OptionalParameter(Parameter):
     def _warn_on_wrong_param_type(self, param_name, param_value):
         if self.__class__ != OptionalParameter:
             return
-        if not isinstance(param_value, six.string_types) and param_value is not None:
+        if not isinstance(param_value, str) and param_value is not None:
             warnings.warn('OptionalParameter "{}" with value "{}" is not of type string or None.'.format(
                 param_name, param_value))
 
@@ -331,7 +330,7 @@ class _DateParameterBase(Parameter):
     """
 
     def __init__(self, interval=1, start=None, **kwargs):
-        super(_DateParameterBase, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.interval = interval
         self.start = start if start is not None else _UNIX_EPOCH.date()
 
@@ -467,7 +466,7 @@ class _DatetimeParameterBase(Parameter):
     """
 
     def __init__(self, interval=1, start=None, **kwargs):
-        super(_DatetimeParameterBase, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.interval = interval
         self.start = start if start is not None else _UNIX_EPOCH
 
@@ -562,7 +561,7 @@ class DateMinuteParameter(_DatetimeParameterBase):
             )
             return value
         except ValueError:
-            return super(DateMinuteParameter, self).parse(s)
+            return super().parse(s)
 
 
 class DateSecondParameter(_DatetimeParameterBase):
@@ -614,7 +613,7 @@ class BoolParameter(Parameter):
     """
 
     def __init__(self, *args, **kwargs):
-        super(BoolParameter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self._default == _no_value:
             self._default = False
 
@@ -679,7 +678,7 @@ class TimeDeltaParameter(Parameter):
         if re_match and any(re_match.groups()):
             kwargs = {}
             has_val = False
-            for k, v in six.iteritems(re_match.groupdict(default="0")):
+            for k, v in re_match.groupdict(default="0").items():
                 val = int(v)
                 if val > -1:
                     has_val = True
@@ -729,14 +728,14 @@ class TimeDeltaParameter(Parameter):
         hours = x.seconds // 3600
         minutes = (x.seconds % 3600) // 60
         seconds = (x.seconds % 3600) % 60
-        result = "{} w {} d {} h {} m {} s".format(weeks, days, hours, minutes, seconds)
+        result = f"{weeks} w {days} d {hours} h {minutes} m {seconds} s"
         return result
 
     def _warn_on_wrong_param_type(self, param_name, param_value):
         if self.__class__ != TimeDeltaParameter:
             return
         if not isinstance(param_value, datetime.timedelta):
-            warnings.warn('Parameter "{}" with value "{}" is not of type timedelta.'.format(param_name, param_value))
+            warnings.warn(f'Parameter "{param_name}" with value "{param_value}" is not of type timedelta.')
 
 
 class TaskParameter(Parameter):
@@ -798,7 +797,7 @@ class EnumParameter(Parameter):
         if 'enum' not in kwargs:
             raise ParameterException('An enum class must be specified.')
         self._enum = kwargs.pop('enum')
-        super(EnumParameter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def parse(self, s):
         try:
@@ -1090,7 +1089,7 @@ class NumericalParameter(Parameter):
                 min_value=self._min_value, max_value=self._max_value,
                 left_endpoint="[" if left_op == operator.le else "(",
                 right_endpoint=")" if right_op == operator.lt else "]"))
-        super(NumericalParameter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.description:
             self.description += " "
         else:
@@ -1144,7 +1143,7 @@ class ChoiceParameter(Parameter):
         self._choices = set(kwargs.pop("choices"))
         self._var_type = var_type
         assert all(type(choice) is self._var_type for choice in self._choices), "Invalid type in choices"
-        super(ChoiceParameter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.description:
             self.description += " "
         else:

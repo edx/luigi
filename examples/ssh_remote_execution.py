@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -15,7 +14,6 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
 
 from collections import defaultdict
 
@@ -50,7 +48,7 @@ class CreateRemoteData(luigi.Task):
     def run(self):
         remote = RemoteContext(SSH_HOST)
         print(remote.check_output([
-            "ps aux > {0}".format(self.output().path)
+            f"ps aux > {self.output().path}"
         ]))
 
 
@@ -79,7 +77,7 @@ class ProcessRemoteData(luigi.Task):
                 processes_per_user[username] += 1
 
         toplist = sorted(
-            six.iteritems(processes_per_user),
+            processes_per_user.items(),
             key=lambda x: x[1],
             reverse=True
         )

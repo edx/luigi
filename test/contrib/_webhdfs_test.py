@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -30,7 +29,7 @@ class TestWebHdfsTarget(unittest.TestCase):
     '''
 
     def setUp(self):
-        self.testDir = "/tmp/luigi-test".format()
+        self.testDir = f"/tmp/luigi-test"
         self.path = os.path.join(self.testDir, 'out.txt')
         self.client = webhdfs.WebHdfsClient()
         self.target = webhdfs.WebHdfsTarget(self.path)

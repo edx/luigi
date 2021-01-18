@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -25,7 +24,6 @@ We use the hypothesis package to do property-based tests.
 
 """
 
-from __future__ import print_function
 
 import string
 import luigi

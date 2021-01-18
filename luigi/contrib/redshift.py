@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -112,7 +111,7 @@ class _CredentialsMixin():
             return 'aws_access_key_id={key};aws_secret_access_key={secret}{opt}'.format(
                 key=self.aws_access_key_id,
                 secret=self.aws_secret_access_key,
-                opt=';token={}'.format(self.aws_session_token) if self.aws_session_token else ''
+                opt=f';token={self.aws_session_token}' if self.aws_session_token else ''
             )
         else:
             raise NotImplementedError("Missing Credentials. "
@@ -337,7 +336,7 @@ class S3CopyToTable(rdbms.CopyToTable, _CredentialsMixin):
         colnames = ''
         if len(self.columns) > 0:
             colnames = ",".join([x[0] for x in self.columns])
-            colnames = '({})'.format(colnames)
+            colnames = f'({colnames})'
 
         cursor.execute("""
          COPY {table} {colnames} from '{source}'
@@ -686,7 +685,7 @@ class RedshiftUnloadTask(postgres.PostgresQuery, _CredentialsMixin):
             unload_options=self.unload_options,
             credentials=self._credentials())
 
-        logger.info('Executing unload query from task: {name}'.format(name=self.__class__))
+        logger.info(f'Executing unload query from task: {self.__class__}')
 
         cursor = connection.cursor()
         cursor.execute(unload_query)

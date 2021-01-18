@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -22,7 +21,6 @@ to subclass :py:class:`luigi.contrib.hadoop.JobTask` and implement a
 an example of how to run a Hadoop job.
 """
 
-from __future__ import print_function
 
 import abc
 import datetime
@@ -207,13 +205,12 @@ def flatten(sequence):
     """
     for item in sequence:
         if hasattr(item, "__iter__") and not isinstance(item, str) and not isinstance(item, bytes):
-            for i in item:
-                yield i
+            yield from item
         else:
             yield item
 
 
-class HadoopRunContext(object):
+class HadoopRunContext:
 
     def __init__(self):
         self.job_id = None
@@ -244,7 +241,7 @@ class HadoopRunContext(object):
 class HadoopJobError(RuntimeError):
 
     def __init__(self, message, out=None, err=None):
-        super(HadoopJobError, self).__init__(message, out, err)
+        super().__init__(message, out, err)
         self.message = message
         self.out = out
         self.err = err
@@ -391,7 +388,7 @@ def fetch_task_failures(tracking_url):
     return '\n'.join(error_text)
 
 
-class JobRunner(object):
+class JobRunner:
     run_job = NotImplemented
 
 
@@ -454,7 +451,7 @@ class HadoopJobRunner(JobRunner):
         config = configuration.get_config()
         python_executable = config.get('hadoop', 'python-executable', 'python')
         runner_arg = 'mrrunner.pex' if job.package_binary is not None else 'mrrunner.py'
-        command = '{0} {1} {{step}}'.format(python_executable, runner_arg)
+        command = f'{python_executable} {runner_arg} {{step}}'
         map_cmd = command.format(step='map')
         cmb_cmd = command.format(step='combiner')
         red_cmd = command.format(step='reduce')
@@ -515,7 +512,7 @@ class HadoopJobRunner(JobRunner):
 
         jobconfs = job.jobconfs()
 
-        for k, v in six.iteritems(self.jobconfs):
+        for k, v in self.jobconfs.items():
             jobconfs.append('%s=%s' % (k, v))
 
         for conf in jobconfs:
@@ -602,7 +599,7 @@ class DefaultHadoopJobRunner(HadoopJobRunner):
     def __init__(self):
         config = configuration.get_config()
         streaming_jar = config.get('hadoop', 'streaming-jar')
-        super(DefaultHadoopJobRunner, self).__init__(streaming_jar=streaming_jar)
+        super().__init__(streaming_jar=streaming_jar)
         # TODO: add more configurable options
 
 
@@ -770,7 +767,7 @@ class BaseHadoopJobTask(luigi.Task):
     {stderr}
       """.format(message=exception.message, stdout=exception.out, stderr=exception.err)
         else:
-            return super(BaseHadoopJobTask, self).on_failure(exception)
+            return super().on_failure(exception)
 
 
 DataInterchange = {
@@ -789,7 +786,7 @@ class JobTask(BaseHadoopJobTask):
     reducer = NotImplemented
 
     def jobconfs(self):
-        jcs = super(JobTask, self).jobconfs()
+        jcs = super().jobconfs()
         if self.reducer == NotImplemented:
             jcs.append('mapred.reduce.tasks=0')
         else:
@@ -894,7 +891,7 @@ class JobTask(BaseHadoopJobTask):
         """
         Increments any unflushed counter values.
         """
-        for key, count in six.iteritems(self._counter_dict):
+        for key, count in self._counter_dict.items():
             if count == 0:
                 continue
             args = list(key) + [count]
@@ -996,11 +993,9 @@ class JobTask(BaseHadoopJobTask):
         the arguments will be splitted in key and value.
         """
         for record in self.reader(input_stream):
-            for output in self.mapper(*record):
-                yield output
+            yield from self.mapper(*record)
         if self.final_mapper != NotImplemented:
-            for output in self.final_mapper():
-                yield output
+            yield from self.final_mapper()
         self._flush_batch_incr_counter()
 
     def _reduce_input(self, inputs, reducer, final=NotImplemented):
@@ -1008,11 +1003,9 @@ class JobTask(BaseHadoopJobTask):
         Iterate over input, collect values with the same key, and call the reducer for each unique key.
         """
         for key, values in groupby(inputs, key=lambda x: self.internal_serialize(x[0])):
-            for output in reducer(self.deserialize(key), (v[1] for v in values)):
-                yield output
+            yield from reducer(self.deserialize(key), (v[1] for v in values))
         if final != NotImplemented:
-            for output in final():
-                yield output
+            yield from final()
         self._flush_batch_incr_counter()
 
     def run_mapper(self, stdin=sys.stdin, stdout=sys.stdout):
@@ -1021,7 +1014,7 @@ class JobTask(BaseHadoopJobTask):
         """
         self.init_hadoop()
         self.init_mapper()
-        outputs = self._map_input((line[:-1] for line in stdin))
+        outputs = self._map_input(line[:-1] for line in stdin)
         if self.reducer == NotImplemented:
             self.writer(outputs, stdout)
         else:
@@ -1033,13 +1026,13 @@ class JobTask(BaseHadoopJobTask):
         """
         self.init_hadoop()
         self.init_reducer()
-        outputs = self._reduce_input(self.internal_reader((line[:-1] for line in stdin)), self.reducer, self.final_reducer)
+        outputs = self._reduce_input(self.internal_reader(line[:-1] for line in stdin), self.reducer, self.final_reducer)
         self.writer(outputs, stdout)
 
     def run_combiner(self, stdin=sys.stdin, stdout=sys.stdout):
         self.init_hadoop()
         self.init_combiner()
-        outputs = self._reduce_input(self.internal_reader((line[:-1] for line in stdin)), self.combiner, self.final_combiner)
+        outputs = self._reduce_input(self.internal_reader(line[:-1] for line in stdin), self.combiner, self.final_combiner)
         self.internal_writer(outputs, stdout)
 
     def internal_reader(self, input_stream):

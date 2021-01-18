@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -20,7 +19,7 @@ import tempfile
 import shlex
 from helpers import unittest
 from luigi.contrib.hadoop_jar import HadoopJarJobError, HadoopJarJobTask, fix_paths
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 
 
 class TestHadoopJarJob(HadoopJarJobTask):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -18,7 +17,7 @@
 import os
 import subprocess
 import tempfile
-import mock
+from unittest import mock
 from helpers import unittest
 
 import luigi
@@ -51,11 +50,11 @@ class LockTest(unittest.TestCase):
 
     def test_get_info(self):
         try:
-            p = subprocess.Popen(["yes", u"à我ф"], stdout=subprocess.PIPE)
+            p = subprocess.Popen(["yes", "à我ф"], stdout=subprocess.PIPE)
             pid, cmd, pid_file = luigi.lock.get_info(self.pid_dir, p.pid)
         finally:
             p.kill()
-        self.assertEqual(cmd, u'yes à我ф')
+        self.assertEqual(cmd, 'yes à我ф')
 
     def test_acquiring_free_lock(self):
         acquired = luigi.lock.acquire_for(self.pid_dir)
@@ -134,10 +133,10 @@ class LockTest(unittest.TestCase):
 
         getpcmd.side_effect = side_effect
         with open(self.pid_file, 'w') as f:
-            f.writelines('{}\n'.format(pid) for pid in ALL_ENTRIES)
+            f.writelines(f'{pid}\n' for pid in ALL_ENTRIES)
 
         acquired = luigi.lock.acquire_for(self.pid_dir, num_available=100)
         self.assertTrue(acquired)
 
-        with open(self.pid_file, 'r') as f:
+        with open(self.pid_file) as f:
             self.assertEqual({int(pid_str.strip()) for pid_str in f}, SAME_ENTRIES)

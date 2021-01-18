@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -27,7 +26,7 @@ from luigi import six
 logger = logging.getLogger('luigi-interface')
 
 
-class StoredTask(object):
+class StoredTask:
     """
     Interface for methods on TaskHistory
     """
@@ -50,8 +49,7 @@ class StoredTask(object):
         return self._task.params
 
 
-@six.add_metaclass(abc.ABCMeta)
-class TaskHistory(object):
+class TaskHistory(metaclass=abc.ABCMeta):
     """
     Abstract Base Class for updating the run history of a task
     """

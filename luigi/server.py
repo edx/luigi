@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -120,9 +119,9 @@ class SelectedRunHandler(BaseTaskHistoryHandler):
                     statusResults[status] = []
                 # append the id, task_id, ts, y with 0, next_process with null
                 # for the status(running/failed/done) of the selected task
-                statusResults[status].append(({
+                statusResults[status].append({
                                                   'id': str(task.id), 'task_id': str(task.task_id),
-                                                  'x': from_utc(str(task.ts)), 'y': 0, 'next_process': ''}))
+                                                  'x': from_utc(str(task.ts)), 'y': 0, 'next_process': ''})
                 # append the id, task_name, task_id, status, datetime, timestamp
                 # for the selected task
                 taskResults.append({
@@ -152,7 +151,7 @@ def from_utc(utcTime, fmt=None):
             date = int(time.mktime(time_struct.timetuple()))
             return date
     else:
-        raise ValueError("No UTC format matches {}".format(utcTime))
+        raise ValueError(f"No UTC format matches {utcTime}")
 
 
 class RecentRunHandler(BaseTaskHistoryHandler):

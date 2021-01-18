@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2015-2015 Spotify AB
 #
@@ -22,14 +21,14 @@ import luigi.worker
 import luigi.execution_summary
 import threading
 import datetime
-import mock
+from unittest import mock
 from enum import Enum
 
 
 class ExecutionSummaryTest(LuigiTestCase):
 
     def setUp(self):
-        super(ExecutionSummaryTest, self).setUp()
+        super().setUp()
         self.scheduler = luigi.scheduler.Scheduler(prune_on_get_work=False)
         self.worker = luigi.worker.Worker(scheduler=self.scheduler)
 
@@ -533,7 +532,7 @@ class ExecutionSummaryTest(LuigiTestCase):
             num = luigi.IntParameter()
 
             def __init__(self, *args, **kwargs):
-                super(Cat, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
                 self.comp = False
 
             def run(self):

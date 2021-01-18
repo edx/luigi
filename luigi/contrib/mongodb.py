@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2017 Big Datext Inc
 #
@@ -60,7 +59,7 @@ class MongoCellTarget(MongoTarget):
         :param path: full path to the targeted field in the mongo document
         :type path: str
         """
-        super(MongoCellTarget, self).__init__(mongo_client, index, collection)
+        super().__init__(mongo_client, index, collection)
 
         self._document_id = document_id
         self._path = path
@@ -110,7 +109,7 @@ class MongoRangeTarget(MongoTarget):
         :param field: targeted field in documents
         :type field: str
         """
-        super(MongoRangeTarget, self).__init__(mongo_client, index, collection)
+        super().__init__(mongo_client, index, collection)
 
         self._document_ids = document_ids
         self._field = field
@@ -174,7 +173,7 @@ class MongoCollectionTarget(MongoTarget):
     """ Target for existing collection """
 
     def __init__(self, mongo_client, index, collection):
-        super(MongoCollectionTarget, self).__init__(mongo_client, index, collection)
+        super().__init__(mongo_client, index, collection)
 
     def exists(self):
         """
@@ -199,7 +198,7 @@ class MongoCountTarget(MongoTarget):
         :param target_count: Value of the desired item count in the target
         :type field: int
         """
-        super(MongoCountTarget, self).__init__(mongo_client, index, collection)
+        super().__init__(mongo_client, index, collection)
 
         self._target_count = target_count
 

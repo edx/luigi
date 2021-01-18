@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2015 Gouthaman Balaraman
 #
@@ -33,8 +32,7 @@ from luigi.mock import MockTarget
 from nose.plugins.attrib import attr
 from helpers import skipOnTravis
 
-if six.PY3:
-    unicode = str
+unicode = str
 
 
 class BaseTask(luigi.Task):
@@ -253,8 +251,7 @@ class TestSQLA(unittest.TestCase):
                 tasks = [("item0", "property0"), ("item1", "property1"), ("item2", "property2"), ("item3", "property3"),
                          ("item4", "property4"), ("item5", "property5"), ("item6", "property6"), ("item7", "property7"),
                          ("item8", "property8"), ("item9", "property9")]
-                for row in tasks:
-                    yield row
+                yield from tasks
 
         task = SQLARowOverloadTest()
         luigi.build([task], local_scheduler=True, workers=self.NUM_WORKERS)

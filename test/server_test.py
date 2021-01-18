@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -37,7 +36,7 @@ from nose.plugins.attrib import attr
 try:
     from unittest import mock
 except ImportError:
-    import mock
+    from unittest import mock
 
 
 def _is_running_from_main_thread():
@@ -61,7 +60,7 @@ class ServerTestBase(AsyncHTTPTestCase):
         return luigi.server.app(Scheduler())
 
     def setUp(self):
-        super(ServerTestBase, self).setUp()
+        super().setUp()
 
         self._old_fetch = luigi.rpc.RemoteScheduler._fetch
 
@@ -78,7 +77,7 @@ class ServerTestBase(AsyncHTTPTestCase):
         luigi.rpc.RemoteScheduler._fetch = _fetch
 
     def tearDown(self):
-        super(ServerTestBase, self).tearDown()
+        super().tearDown()
         luigi.rpc.RemoteScheduler._fetch = self._old_fetch
 
 
@@ -171,7 +170,7 @@ class _ServerTest(unittest.TestCase):
 
 @attr('unixsocket')
 class UNIXServerTest(_ServerTest):
-    class ServerClient(object):
+    class ServerClient:
         def __init__(self):
             self.tempdir = tempfile.mkdtemp()
             self.unix_socket = os.path.join(self.tempdir, 'luigid.sock')
@@ -193,11 +192,11 @@ class UNIXServerTest(_ServerTest):
     server_client_class = ServerClient
 
     def tearDown(self):
-        super(UNIXServerTest, self).tearDown()
+        super().tearDown()
         shutil.rmtree(self.server_client.tempdir)
 
 
-class INETServerClient(object):
+class INETServerClient:
     def __init__(self):
         # Just some port
         self.port = 8083
@@ -228,7 +227,7 @@ class INETURLLibServerTest(INETProcessServerTest):
 
     @mock.patch.object(luigi.rpc, 'HAS_REQUESTS', False)
     def start_server(self, *args, **kwargs):
-        super(INETURLLibServerTest, self).start_server(*args, **kwargs)
+        super().start_server(*args, **kwargs)
 
     @skipOnTravis('https://travis-ci.org/spotify/luigi/jobs/81022689')
     def patching_test(self):
@@ -270,7 +269,7 @@ class INETLuigidDaemonServerTest(_INETServerTest):
             ])
 
     def tearDown(self):
-        super(INETLuigidDaemonServerTest, self).tearDown()
+        super().tearDown()
         shutil.rmtree(self.server_client.tempdir)
 
     server_client_class = ServerClient

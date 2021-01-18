@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -67,7 +66,7 @@ class InvalidQuery(OpenerError):
     pass
 
 
-class OpenerRegistry(object):
+class OpenerRegistry:
 
     def __init__(self, openers=None):
         """An opener registry that  stores a number of opener objects used
@@ -142,7 +141,7 @@ class OpenerRegistry(object):
         return target
 
 
-class Opener(object):
+class Opener:
 
     """Base class for Opener objects.
 

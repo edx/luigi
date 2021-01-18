@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -30,8 +29,7 @@ import luigi.contrib.hadoop
 from luigi.target import FileAlreadyExists, FileSystemTarget
 from luigi.task import flatten
 
-if six.PY3:
-    unicode = str
+unicode = str
 
 logger = logging.getLogger('luigi-interface')
 
@@ -39,7 +37,7 @@ logger = logging.getLogger('luigi-interface')
 class HiveCommandError(RuntimeError):
 
     def __init__(self, message, out=None, err=None):
-        super(HiveCommandError, self).__init__(message, out, err)
+        super().__init__(message, out, err)
         self.message = message
         self.out = out
         self.err = err
@@ -66,7 +64,7 @@ def run_hive(args, check_return_code=True):
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     if check_return_code and p.returncode != 0:
-        raise HiveCommandError("Hive command: {0} failed with error code: {1}".format(" ".join(cmd), p.returncode),
+        raise HiveCommandError("Hive command: {} failed with error code: {}".format(" ".join(cmd), p.returncode),
                                stdout, stderr)
     return stdout
 
@@ -83,12 +81,11 @@ def run_hive_script(script):
     Runs the contents of the given script in hive and returns stdout.
     """
     if not os.path.isfile(script):
-        raise RuntimeError("Hive script: {0} does not exist.".format(script))
+        raise RuntimeError(f"Hive script: {script} does not exist.")
     return run_hive(['-f', script])
 
 
-@six.add_metaclass(abc.ABCMeta)
-class HiveClient(object):  # interface
+class HiveClient(metaclass=abc.ABCMeta):  # interface
 
     @abc.abstractmethod
     def table_location(self, table, database='default', partition=None):
@@ -125,9 +122,9 @@ class HiveCommandClient(HiveClient):
     """
 
     def table_location(self, table, database='default', partition=None):
-        cmd = "use {0}; describe formatted {1}".format(database, table)
+        cmd = f"use {database}; describe formatted {table}"
         if partition is not None:
-            cmd += " PARTITION ({0})".format(self.partition_spec(partition))
+            cmd += " PARTITION ({})".format(self.partition_spec(partition))
 
         stdout = run_hive_cmd(cmd)
 
@@ -137,7 +134,7 @@ class HiveCommandClient(HiveClient):
 
     def table_exists(self, table, database='default', partition=None):
         if partition is None:
-            stdout = run_hive_cmd('use {0}; show tables like "{1}";'.format(database, table))
+            stdout = run_hive_cmd(f'use {database}; show tables like "{table}";')
 
             return stdout and table.lower() in stdout
         else:
@@ -150,7 +147,7 @@ class HiveCommandClient(HiveClient):
                 return False
 
     def table_schema(self, table, database='default'):
-        describe = run_hive_cmd("use {0}; describe {1}".format(database, table))
+        describe = run_hive_cmd(f"use {database}; describe {table}")
         if not describe or "does not exist" in describe:
             return None
         return [tuple([x.strip() for x in line.strip().split("\t")]) for line in describe.strip().split("\n")]
@@ -159,8 +156,8 @@ class HiveCommandClient(HiveClient):
         """
         Turns a dict into the a Hive partition specification string.
         """
-        return ','.join(["`{0}`='{1}'".format(k, v) for (k, v) in
-                         sorted(six.iteritems(partition), key=operator.itemgetter(0))])
+        return ','.join([f"`{k}`='{v}'" for (k, v) in
+                         sorted(partition.items(), key=operator.itemgetter(0))])
 
 
 class ApacheHiveCommandClient(HiveCommandClient):
@@ -170,7 +167,7 @@ class ApacheHiveCommandClient(HiveCommandClient):
     """
 
     def table_schema(self, table, database='default'):
-        describe = run_hive_cmd("use {0}; describe {1}".format(database, table), False)
+        describe = run_hive_cmd(f"use {database}; describe {table}", False)
         if not describe or "Table not found" in describe:
             return None
         return [tuple([x.strip() for x in line.strip().split("\t")]) for line in describe.strip().split("\n")]
@@ -215,10 +212,10 @@ class MetastoreClient(HiveClient):
             return [(field_schema.name, field_schema.type) for field_schema in client.get_schema(database, table)]
 
     def partition_spec(self, partition):
-        return "/".join("%s=%s" % (k, v) for (k, v) in sorted(six.iteritems(partition), key=operator.itemgetter(0)))
+        return "/".join("%s=%s" % (k, v) for (k, v) in sorted(partition.items(), key=operator.itemgetter(0)))
 
 
-class HiveThriftContext(object):
+class HiveThriftContext:
     """
     Context manager for hive metastore client.
     """
@@ -361,12 +358,12 @@ class HiveQueryRunner(luigi.contrib.hadoop.JobRunner):
                 arglist += ['-i', rcfile]
         hiveconfs = job.hiveconfs()
         if hiveconfs:
-            for k, v in six.iteritems(hiveconfs):
-                arglist += ['--hiveconf', '{0}={1}'.format(k, v)]
+            for k, v in hiveconfs.items():
+                arglist += ['--hiveconf', f'{k}={v}']
         hivevars = job.hivevars()
         if hivevars:
-            for k, v in six.iteritems(hivevars):
-                arglist += ['--hivevar', '{0}={1}'.format(k, v)]
+            for k, v in hivevars.items():
+                arglist += ['--hivevar', f'{k}={v}']
         logger.info(arglist)
         return arglist
 
@@ -407,7 +404,7 @@ class HiveTableTarget(luigi.Target):
         """
         location = self.client.table_location(self.table, self.database)
         if not location:
-            raise Exception("Couldn't find location for table: {0}".format(str(self)))
+            raise Exception("Couldn't find location for table: {}".format(str(self)))
         return location
 
     def open(self, mode):
@@ -449,7 +446,7 @@ class HivePartitionTarget(luigi.Target):
         """
         location = self.client.table_location(self.table, self.database, self.partition)
         if not location:
-            raise Exception("Couldn't find location for table: {0}".format(str(self)))
+            raise Exception("Couldn't find location for table: {}".format(str(self)))
         return location
 
     def open(self, mode):

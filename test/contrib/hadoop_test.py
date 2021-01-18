@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -27,7 +26,7 @@ import luigi.contrib.hdfs
 import luigi.contrib.mrrunner
 import luigi.notifications
 import minicluster
-import mock
+from unittest import mock
 from luigi.mock import MockTarget
 from luigi.six import StringIO
 from nose.plugins.attrib import attr
@@ -136,7 +135,7 @@ class MapOnlyJob(HadoopJobTask):
 class UnicodeJob(HadoopJobTask):
 
     def mapper(self, line):
-        yield u'test', 1
+        yield 'test', 1
         yield b'test', 1
 
     def reducer(self, word, occurences):
@@ -192,7 +191,7 @@ def read_wordcount_output(p):
     return count
 
 
-class CommonTests(object):
+class CommonTests:
 
     @staticmethod
     def test_run(test_case):
@@ -384,7 +383,7 @@ class CreatePackagesArchive(unittest.TestCase):
         self._assert_package_subpackage(tar.return_value.add)
 
 
-class MockProcess(object):
+class MockProcess:
     def __init__(self, err_lines, returncode):
         err = ''.join(err_lines)
         self.__err_len = len(err)
@@ -400,10 +399,10 @@ class MockProcess(object):
 
 class KeyboardInterruptedMockProcess(MockProcess):
     def __init__(self, err_lines):
-        super(KeyboardInterruptedMockProcess, self).__init__(err_lines, 0)
+        super().__init__(err_lines, 0)
 
     def poll(self):
-        if super(KeyboardInterruptedMockProcess, self).poll() is not None:
+        if super().poll() is not None:
             raise KeyboardInterrupt
 
 

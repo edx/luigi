@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 You can run this example like this:
 

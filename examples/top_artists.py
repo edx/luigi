@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -110,7 +109,7 @@ class AggregateArtists(luigi.Task):
         :return: the target output for this task.
         :rtype: object (:py:class:`luigi.target.Target`)
         """
-        return luigi.LocalTarget("data/artist_streams_{}.tsv".format(self.date_interval))
+        return luigi.LocalTarget(f"data/artist_streams_{self.date_interval}.tsv")
 
     def requires(self):
         """
@@ -132,8 +131,8 @@ class AggregateArtists(luigi.Task):
                     artist_count[artist] += 1
 
         with self.output().open('w') as out_file:
-            for artist, count in six.iteritems(artist_count):
-                out_file.write('{}\t{}\n'.format(artist, count))
+            for artist, count in artist_count.items():
+                out_file.write(f'{artist}\t{count}\n')
 
 
 class AggregateArtistsHadoop(luigi.contrib.hadoop.JobTask):
@@ -235,7 +234,7 @@ class Top10Artists(luigi.Task):
                     artist,
                     str(streams)
                 ])
-                out_file.write((out_line + '\n'))
+                out_file.write(out_line + '\n')
 
     def _input_iterator(self):
         with self.input().open('r') as in_file:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -147,7 +146,7 @@ class MockTarget(target.FileSystemTarget):
                 if mock_target._mirror_on_stderr:
                     if self._write_line:
                         sys.stderr.write(fn + ": ")
-                    if six.binary_type:
+                    if bytes:
                         sys.stderr.write(data.decode('utf8'))
                     else:
                         sys.stderr.write(data)
@@ -155,7 +154,7 @@ class MockTarget(target.FileSystemTarget):
                         self._write_line = True
                     else:
                         self._write_line = False
-                super(Buffer, self).write(data)
+                super().write(data)
 
             def close(self):
                 if mode == 'w':
@@ -164,7 +163,7 @@ class MockTarget(target.FileSystemTarget):
                     except AttributeError:
                         pass
                     mock_target.fs.get_all_data()[fn] = self.getvalue()
-                super(Buffer, self).close()
+                super().close()
 
             def __exit__(self, exc_type, exc_val, exc_tb):
                 if not exc_type:
@@ -193,4 +192,4 @@ class MockTarget(target.FileSystemTarget):
 class MockFile(MockTarget):
     def __init__(self, *args, **kwargs):
         warnings.warn("MockFile has been renamed MockTarget", DeprecationWarning, stacklevel=2)
-        super(MockFile, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)

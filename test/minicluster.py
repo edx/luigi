@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -59,7 +58,7 @@ class MiniClusterTestCase(unittest.TestCase):
         self.fs = luigi.contrib.hdfs.get_autoconfig_client()
         cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "testconfig")
         hadoop_bin = os.path.join(os.environ['HADOOP_HOME'], 'bin/hadoop')
-        cmd = "{} --config {}".format(hadoop_bin, cfg_path)
+        cmd = f"{hadoop_bin} --config {cfg_path}"
         self.stashed_hdfs_client = luigi.configuration.get_config().get('hadoop', 'command', None)
         luigi.configuration.get_config().set('hadoop', 'command', cmd)
 
@@ -93,4 +92,4 @@ class MiniClusterHadoopJobRunner(luigi.contrib.hadoop.HadoopJobRunner):
         else:
             raise Exception('Could not locate streaming jar in ' + hadoop_tools_lib)
 
-        super(MiniClusterHadoopJobRunner, self).__init__(streaming_jar=streaming_jar)
+        super().__init__(streaming_jar=streaming_jar)

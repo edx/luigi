@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -22,7 +21,7 @@ from helpers import unittest
 
 from luigi import six
 import luigi.contrib.hive
-import mock
+from unittest import mock
 from luigi import LocalTarget
 
 
@@ -32,7 +31,7 @@ class HiveTest(unittest.TestCase):
     def mock_hive_cmd(self, args, check_return=True):
         self.last_hive_cmd = args
         self.count += 1
-        return "statement{0}".format(self.count)
+        return f"statement{self.count}"
 
     def setUp(self):
         self.run_hive_cmd_saved = luigi.contrib.hive.run_hive
@@ -45,7 +44,7 @@ class HiveTest(unittest.TestCase):
         pre_count = self.count
         res = luigi.contrib.hive.run_hive_cmd("foo")
         self.assertEqual(["-e", "foo"], self.last_hive_cmd)
-        self.assertEqual("statement{0}".format(pre_count + 1), res)
+        self.assertEqual("statement{}".format(pre_count + 1), res)
 
     def test_run_hive_script_not_exists(self):
         def test():
@@ -57,12 +56,12 @@ class HiveTest(unittest.TestCase):
             pre_count = self.count
             res = luigi.contrib.hive.run_hive_script(f.name)
             self.assertEqual(["-f", f.name], self.last_hive_cmd)
-            self.assertEqual("statement{0}".format(pre_count + 1), res)
+            self.assertEqual("statement{}".format(pre_count + 1), res)
 
     def test_create_parent_dirs(self):
         dirname = "/tmp/hive_task_test_dir"
 
-        class FooHiveTask(object):
+        class FooHiveTask:
 
             def output(self):
                 return LocalTarget(os.path.join(dirname, "foo"))
@@ -318,12 +317,12 @@ class TestHiveTaskArgs(TestHiveTask):
         f_idx = arglist.index('-f')
         self.assertEqual(arglist[f_idx + 1], f_name)
 
-        hivevars = ['{}={}'.format(k, v) for k, v in six.iteritems(task.hivevars())]
+        hivevars = [f'{k}={v}' for k, v in task.hivevars().items()]
         for var in hivevars:
             idx = arglist.index(var)
             self.assertEqual(arglist[idx - 1], '--hivevar')
 
-        hiveconfs = ['{}={}'.format(k, v) for k, v in six.iteritems(task.hiveconfs())]
+        hiveconfs = [f'{k}={v}' for k, v in task.hiveconfs().items()]
         for conf in hiveconfs:
             idx = arglist.index(conf)
             self.assertEqual(arglist[idx - 1], '--hiveconf')

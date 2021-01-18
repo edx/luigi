@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -20,7 +19,6 @@ Implementation of Simple Storage Service support.
 system operations. The `boto` library is required to use S3 targets.
 """
 
-from __future__ import division
 
 import datetime
 import itertools
@@ -571,7 +569,7 @@ class S3Client(FileSystem):
         except NoSectionError:
             return {}
         # So what ports etc can be read without us having to specify all dtypes
-        for k, v in six.iteritems(config):
+        for k, v in config.items():
             try:
                 config[k] = int(v)
             except ValueError:
@@ -602,14 +600,14 @@ class AtomicS3File(AtomicLocalFile):
 
     def __init__(self, path, s3_client, **kwargs):
         self.s3_client = s3_client
-        super(AtomicS3File, self).__init__(path)
+        super().__init__(path)
         self.s3_options = kwargs
 
     def move_to_final_destination(self):
         self.s3_client.put_multipart(self.tmp_path, self.path, **self.s3_options)
 
 
-class ReadableS3File(object):
+class ReadableS3File:
     def __init__(self, s3_key):
         self.s3_key = s3_key
         self.buffer = []
@@ -700,7 +698,7 @@ class S3Target(FileSystemTarget):
     fs = None
 
     def __init__(self, path, format=None, client=None, **kwargs):
-        super(S3Target, self).__init__(path)
+        super().__init__(path)
         if format is None:
             format = get_default_format()
 
@@ -765,7 +763,7 @@ class S3FlagTarget(S3Target):
         if path[-1] != "/":
             raise ValueError("S3FlagTarget requires the path to be to a "
                              "directory.  It must end with a slash ( / ).")
-        super(S3FlagTarget, self).__init__(path, format, client)
+        super().__init__(path, format, client)
         self.flag = flag
 
     def exists(self):
@@ -780,7 +778,7 @@ class S3EmrTarget(S3FlagTarget):
 
     def __init__(self, *args, **kwargs):
         warnings.warn("S3EmrTarget is deprecated. Please use S3FlagTarget")
-        super(S3EmrTarget, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class S3PathTask(ExternalTask):

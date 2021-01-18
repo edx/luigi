@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -16,7 +15,7 @@
 #
 
 from helpers import unittest
-import mock
+from unittest import mock
 import sys
 import socket
 
@@ -120,45 +119,45 @@ class ExceptionFormatTest(unittest.TestCase):
 
     def _check_body(self, body, task, html=False):
         if html:
-            self.assertIn('<th>name</th><td>{}</td>'.format(task.task_family), body)
+            self.assertIn(f'<th>name</th><td>{task.task_family}</td>', body)
             self.assertIn('<div class="highlight"', body)
             self.assertIn('Oops!', body)
 
             for param, value in task.param_kwargs.items():
-                self.assertIn('<th>{}</th><td>{}</td>'.format(param, value), body)
+                self.assertIn(f'<th>{param}</th><td>{value}</td>', body)
         else:
-            self.assertIn('Name: {}\n'.format(task.task_family), body)
+            self.assertIn(f'Name: {task.task_family}\n', body)
             self.assertIn('Parameters:\n', body)
             self.assertIn('TestException: Oops!', body)
 
             for param, value in task.param_kwargs.items():
-                self.assertIn('{}: {}\n'.format(param, value), body)
+                self.assertIn(f'{param}: {value}\n', body)
 
     @with_config({"email": {"receiver": "a@a.a"}})
     def testEmailRecipients(self):
-        six.assertCountEqual(self, notifications._email_recipients(), ["a@a.a"])
-        six.assertCountEqual(self, notifications._email_recipients("b@b.b"), ["a@a.a", "b@b.b"])
-        six.assertCountEqual(self, notifications._email_recipients(["b@b.b", "c@c.c"]),
+        self.assertCountEqual(notifications._email_recipients(), ["a@a.a"])
+        self.assertCountEqual(notifications._email_recipients("b@b.b"), ["a@a.a", "b@b.b"])
+        self.assertCountEqual(notifications._email_recipients(["b@b.b", "c@c.c"]),
                              ["a@a.a", "b@b.b", "c@c.c"])
 
     @with_config({"email": {}}, replace_sections=True)
     def testEmailRecipientsNoConfig(self):
-        six.assertCountEqual(self, notifications._email_recipients(), [])
-        six.assertCountEqual(self, notifications._email_recipients("a@a.a"), ["a@a.a"])
-        six.assertCountEqual(self, notifications._email_recipients(["a@a.a", "b@b.b"]),
+        self.assertCountEqual(notifications._email_recipients(), [])
+        self.assertCountEqual(notifications._email_recipients("a@a.a"), ["a@a.a"])
+        self.assertCountEqual(notifications._email_recipients(["a@a.a", "b@b.b"]),
                              ["a@a.a", "b@b.b"])
 
     def test_generate_unicode_email(self):
         generate_email(
             sender='test@example.com',
-            subject=six.u('sübjéct'),
-            message=six.u("你好"),
+            subject='sübjéct',
+            message="你好",
             recipients=['receiver@example.com'],
             image_png=None,
         )
 
 
-class NotificationFixture(object):
+class NotificationFixture:
     """
     Defines API and message fixture.
 
@@ -292,7 +291,7 @@ class TestSMTPEmail(unittest.TestCase, NotificationFixture):
 
                 try:
                     notifications.send_email_smtp(*self.notification_args)
-                except socket.error:
+                except OSError:
                     self.fail("send_email_smtp() raised expection unexpectedly")
 
                 SMTP.assert_called_once_with(**smtp_kws)
@@ -421,7 +420,7 @@ class TestNotificationDispatcher(unittest.TestCase, NotificationFixture):
 
         expected_args = self.notification_args
 
-        with mock.patch('luigi.notifications.{}'.format(target)) as sender:
+        with mock.patch(f'luigi.notifications.{target}') as sender:
             notifications.send_email(self.subject, self.message, self.sender,
                                      self.recipients, image_png=self.image_png)
 

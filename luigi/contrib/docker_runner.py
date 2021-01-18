@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2017 Open Targets
 #
@@ -128,7 +127,7 @@ class DockerTask(luigi.Task):
         - create a tmp dir
         - add the temp dir to the volume binds specified in the task
         '''
-        super(DockerTask, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__logger = logger
 
         '''init docker client
@@ -150,7 +149,7 @@ class DockerTask(luigi.Task):
                                          prefix='luigi-docker-tmp-dir-',
                                          dir='/tmp')
 
-            self._binds = ['{0}:{1}'.format(self._host_tmp_dir, self.container_tmp_dir)]
+            self._binds = [f'{self._host_tmp_dir}:{self.container_tmp_dir}']
         else:
             self._binds = []
 
@@ -158,7 +157,7 @@ class DockerTask(luigi.Task):
         self.environment['LUIGI_TMP_DIR'] = self.container_tmp_dir
 
         # add additional volume binds specified by the user to the tmp_Dir bind
-        if isinstance(self.binds, six.string_types):
+        if isinstance(self.binds, str):
             self._binds.append(self.binds)
         elif isinstance(self.binds, list):
             self._binds.extend(self.binds)

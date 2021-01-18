@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Twitter Inc
 #
@@ -59,7 +58,7 @@ def bucket_url(suffix):
     """
     Actually it's bucket + test folder name
     """
-    return 'gs://{}/{}/{}'.format(BUCKET_NAME, TEST_FOLDER, suffix)
+    return f'gs://{BUCKET_NAME}/{TEST_FOLDER}/{suffix}'
 
 
 @attr('gcloud')
@@ -482,31 +481,31 @@ class BigQueryLoadAvroTest(unittest.TestCase):
         self.addCleanup(os.remove, "tmp.avro")
         writer = DataFileWriter(open("tmp.avro", "wb"), DatumWriter(), schema)
         writer.append({
-            u'track_gid': u'Cool guid',
-            u'map_record': {
-                u'Cool key': {
-                    u'element1': u'element 1 data',
-                    u'element2': u'element 2 data'
+            'track_gid': 'Cool guid',
+            'map_record': {
+                'Cool key': {
+                    'element1': 'element 1 data',
+                    'element2': 'element 2 data'
                 }
             },
-            u'additional': {
-                u'key1': u'value1'
-            }, u'master_metadata': {
-                u'track': {
-                    u'id': 1,
-                    u'name': u'Cool Track Name'
+            'additional': {
+                'key1': 'value1'
+            }, 'master_metadata': {
+                'track': {
+                    'id': 1,
+                    'name': 'Cool Track Name'
                 }
-            }, u'track_uri': u'Totally a url here',
-            u'FakeRecord': {
-                u'coolName': u'Cool Fake Record Name'
+            }, 'track_uri': 'Totally a url here',
+            'FakeRecord': {
+                'coolName': 'Cool Fake Record Name'
             },
-            u'Suit': u'DIAMONDS',
-            u'children': [
+            'Suit': 'DIAMONDS',
+            'children': [
                 {
-                    u'name': u'Bob'
+                    'name': 'Bob'
                 },
                 {
-                    u'name': u'Joe'
+                    'name': 'Joe'
                 }
             ]
         })

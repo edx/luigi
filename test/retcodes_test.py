@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2015-2015 Spotify AB
 #
@@ -15,7 +14,7 @@
 # limitations under the License.
 #
 from helpers import LuigiTestCase, with_config
-import mock
+from unittest import mock
 import luigi
 import luigi.scheduler
 from luigi.cmdline import luigi_run
@@ -25,7 +24,7 @@ class RetcodesTest(LuigiTestCase):
 
     def run_and_expect(self, joined_params, retcode, extra_args=['--local-scheduler', '--no-lock']):
         with self.assertRaises(SystemExit) as cm:
-            luigi_run((joined_params.split(' ') + extra_args))
+            luigi_run(joined_params.split(' ') + extra_args)
         self.assertEqual(cm.exception.code, retcode)
 
     def run_with_config(self, retcode_config, *args, **kwargs):
@@ -97,7 +96,7 @@ class RetcodesTest(LuigiTestCase):
 
     def test_validate_dependency_error(self):
         # requires() from RequiringTask expects a Task object
-        class DependencyTask(object):
+        class DependencyTask:
             pass
 
         class RequiringTask(luigi.Task):

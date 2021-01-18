@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Twitter Inc
 #
@@ -25,7 +24,7 @@ from luigi.contrib import bigquery
 from luigi.contrib.gcs import GCSTarget
 
 from helpers import unittest
-from mock import MagicMock
+from unittest.mock import MagicMock
 
 PROJECT_ID = 'projectid'
 DATASET_ID = 'dataset'
@@ -59,7 +58,7 @@ class TestRunQueryTaskWithRequires(bigquery.BigQueryRunQueryTask):
         requires = self.requires().output().table
         dataset = requires.dataset_id
         table = requires.table_id
-        return 'SELECT * FROM [{dataset}.{table}]'.format(dataset=dataset, table=table)
+        return f'SELECT * FROM [{dataset}.{table}]'
 
     def output(self):
         return bigquery.BigQueryTarget(PROJECT_ID, DATASET_ID, self.table, client=self.client)

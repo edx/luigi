@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -112,7 +111,7 @@ class TaskProcess(multiprocessing.Process):
 
     def __init__(self, task, worker_id, result_queue, status_reporter,
                  use_multiprocessing=False, worker_timeout=0, check_unfulfilled_deps=True):
-        super(TaskProcess, self).__init__()
+        super().__init__()
         self.task = task
         self.worker_id = worker_id
         self.result_queue = result_queue
@@ -141,7 +140,7 @@ class TaskProcess(multiprocessing.Process):
         while True:
             try:
                 if next_send is None:
-                    requires = six.next(task_gen)
+                    requires = next(task_gen)
                 else:
                     requires = task_gen.send(next_send)
             except StopIteration:
@@ -227,7 +226,7 @@ class TaskProcess(multiprocessing.Process):
             children = parent.children(recursive=True)
 
             # terminate parent. Give it a chance to clean up
-            super(TaskProcess, self).terminate()
+            super().terminate()
             parent.wait()
 
             # terminate children
@@ -245,10 +244,10 @@ class TaskProcess(multiprocessing.Process):
         try:
             return self._recursive_terminate()
         except ImportError:
-            return super(TaskProcess, self).terminate()
+            return super().terminate()
 
 
-class TaskStatusReporter(object):
+class TaskStatusReporter:
     """
     Reports task status information to the scheduler.
 
@@ -275,7 +274,7 @@ class TaskStatusReporter(object):
         self._scheduler.set_task_progress_percentage(self._task_id, percentage)
 
 
-class SingleProcessPool(object):
+class SingleProcessPool:
     """
     Dummy process pool for using a single processor.
 
@@ -316,7 +315,7 @@ class AsyncCompletionException(Exception):
         self.trace = trace
 
 
-class TracebackWrapper(object):
+class TracebackWrapper:
     """
     Class to wrap tracebacks so we can know they're not just strings.
     """
@@ -384,7 +383,7 @@ class KeepAliveThread(threading.Thread):
     """
 
     def __init__(self, scheduler, worker_id, ping_interval, rpc_message_callback):
-        super(KeepAliveThread, self).__init__()
+        super().__init__()
         self._should_stop = threading.Event()
         self._scheduler = scheduler
         self._worker_id = worker_id
@@ -418,7 +417,7 @@ def rpc_message_callback(fn):
     return fn
 
 
-class Worker(object):
+class Worker:
     """
     Worker object communicates with a scheduler.
 
@@ -555,11 +554,11 @@ class Worker(object):
             raise TaskException('Task of class %s not initialized. Did you override __init__ and forget to call super(...).__init__?' % task.__class__.__name__)
 
     def _log_complete_error(self, task, tb):
-        log_msg = "Will not run {task} or any dependencies due to error in complete() method:\n{tb}".format(task=task, tb=tb)
+        log_msg = f"Will not run {task} or any dependencies due to error in complete() method:\n{tb}"
         logger.warning(log_msg)
 
     def _log_dependency_error(self, task, tb):
-        log_msg = "Will not run {task} or any dependencies due to error in deps() method:\n{tb}".format(task=task, tb=tb)
+        log_msg = f"Will not run {task} or any dependencies due to error in deps() method:\n{tb}"
         logger.warning(log_msg)
 
     def _log_unexpected_error(self, task):
@@ -623,7 +622,7 @@ class Worker(object):
     def _handle_task_load_error(self, exception, task_ids):
         msg = 'Cannot find task(s) sent by scheduler: {}'.format(','.join(task_ids))
         logger.exception(msg)
-        subject = 'Luigi: {}'.format(msg)
+        subject = f'Luigi: {msg}'
         error_message = notifications.wrap_traceback(exception)
         for task_id in task_ids:
             self._add_task(
@@ -901,7 +900,7 @@ class Worker(object):
 
     def _run_task(self, task_id):
         if task_id in self._running_tasks:
-            logger.debug('Got already running task id {} from scheduler, taking a break'.format(task_id))
+            logger.debug(f'Got already running task id {task_id} from scheduler, taking a break')
             next(self._sleeper())
             return
 
@@ -933,13 +932,13 @@ class Worker(object):
 
         :return:
         """
-        for task_id, p in six.iteritems(self._running_tasks):
+        for task_id, p in self._running_tasks.items():
             if not p.is_alive() and p.exitcode:
-                error_msg = 'Task {} died unexpectedly with exit code {}'.format(task_id, p.exitcode)
+                error_msg = f'Task {task_id} died unexpectedly with exit code {p.exitcode}'
                 p.task.trigger_event(Event.PROCESS_FAILURE, p.task, error_msg)
             elif p.timeout_time is not None and time.time() > float(p.timeout_time) and p.is_alive():
                 p.terminate()
-                error_msg = 'Task {} timed out after {} seconds and was terminated.'.format(task_id, p.task.worker_timeout)
+                error_msg = f'Task {task_id} timed out after {p.task.worker_timeout} seconds and was terminated.'
                 p.task.trigger_event(Event.TIMEOUT, p.task, error_msg)
             else:
                 continue
@@ -1088,7 +1087,7 @@ class Worker(object):
                     self._log_remote_tasks(get_work_response)
                 if len(self._running_tasks) == 0:
                     if self._keep_alive(get_work_response):
-                        six.next(sleeper)
+                        next(sleeper)
                         continue
                     else:
                         break

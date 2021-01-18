@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -24,8 +23,7 @@ from luigi import six
 import luigi.target
 
 
-@six.add_metaclass(abc.ABCMeta)
-class HdfsFileSystem(luigi.target.FileSystem):
+class HdfsFileSystem(luigi.target.FileSystem, metaclass=abc.ABCMeta):
     """
     This client uses Apache 2.x syntax for file system commands, which also matched CDH4.
     """
@@ -52,7 +50,7 @@ class HdfsFileSystem(luigi.target.FileSystem):
         """
         # We only override this method to be able to provide a more specific
         # docstring.
-        return super(HdfsFileSystem, self).rename_dont_move(path, dest)
+        return super().rename_dont_move(path, dest)
 
     @abc.abstractmethod
     def remove(self, path, recursive=True, skip_trash=False):

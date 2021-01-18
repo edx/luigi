@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -14,13 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from __future__ import print_function
 
 try:
     import ConfigParser
 except ImportError:
     import configparser as ConfigParser
-import mock
+from unittest import mock
 import os
 import subprocess
 from helpers import unittest
@@ -123,10 +121,7 @@ class CmdlineTest(unittest.TestCase):
             self.assertEqual([mock.call(handler.return_value)], logger.return_value.addHandler.call_args_list)
 
         with mock.patch("luigi.interface.setup_interface_logging.has_run", new=False):
-            if six.PY2:
-                error = ConfigParser.NoSectionError
-            else:
-                error = KeyError
+            error = KeyError
             self.assertRaises(error, luigi.interface.setup_interface_logging, '/blah')
 
     @mock.patch("warnings.warn")

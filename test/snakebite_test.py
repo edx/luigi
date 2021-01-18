@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -25,8 +24,7 @@ import luigi.target
 from luigi import six
 from nose.plugins.attrib import attr
 
-if six.PY3:
-    raise unittest.SkipTest("snakebite doesn't work on Python 3 yet.")
+raise unittest.SkipTest("snakebite doesn't work on Python 3 yet.")
 
 try:
     from luigi.contrib.hdfs import SnakebiteHdfsClient
@@ -48,7 +46,7 @@ class TestSnakebiteClient(MiniClusterTestCase):
     def setUp(self):
         """ We override setUp because we want to also use snakebite for
         creating the testing directory.  """
-        self.testDir = "/tmp/luigi-test-{0}-{1}".format(
+        self.testDir = "/tmp/luigi-test-{}-{}".format(
             os.environ["USER"],
             time.mktime(datetime.datetime.now().timetuple())
         )

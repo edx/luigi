@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -75,7 +74,7 @@ class DbTaskHistoryTest(unittest.TestCase):
             self.assertEqual(len(records), 1)
             [record] = records
             self.assertEqual(task.task_family, record.name)
-            for param_name, param_value in six.iteritems(task.param_kwargs):
+            for param_name, param_value in task.param_kwargs.items():
                 self.assertTrue(param_name in record.parameters)
                 self.assertEqual(str(param_value), record.parameters[param_name].value)
 
@@ -114,7 +113,7 @@ class MySQLDbTaskHistoryTest(unittest.TestCase):
         task = DummyTask()
         self.run_task(task)
 
-        task_record = six.advance_iterator(self.history.find_all_by_name('DummyTask'))
+        task_record = next(self.history.find_all_by_name('DummyTask'))
         print(task_record.events)
         self.assertEqual(task_record.events[0].event_name, DONE)
 
@@ -124,12 +123,12 @@ class MySQLDbTaskHistoryTest(unittest.TestCase):
         task = DummyTask()
         self.run_task(task)
 
-        task_record = six.advance_iterator(self.history.find_all_by_name('DummyTask'))
+        task_record = next(self.history.find_all_by_name('DummyTask'))
         last_event = task_record.events[0]
         try:
             print(from_utc(str(last_event.ts)))
         except ValueError:
-            self.fail("Failed to convert timestamp {} to UTC".format(last_event.ts))
+            self.fail(f"Failed to convert timestamp {last_event.ts} to UTC")
 
     def run_task(self, task):
         task2 = luigi.scheduler.Task(task.task_id, PENDING, [],

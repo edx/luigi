@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -111,7 +110,7 @@ class TaskTest(unittest.TestCase):
         self.assertEqual(sorted(flatten(['foo', ['bar', 'troll']])), ['bar', 'foo', 'troll'])
         self.assertEqual(flatten('foo'), ['foo'])
         self.assertEqual(flatten(42), [42])
-        self.assertEqual(flatten((len(i) for i in ["foo", "troll"])), [3, 5])
+        self.assertEqual(flatten(len(i) for i in ["foo", "troll"]), [3, 5])
         self.assertRaises(TypeError, flatten, (len(i) for i in ["foo", "troll", None]))
 
     def test_externalized_task_picklable(self):
@@ -137,23 +136,22 @@ class TaskTest(unittest.TestCase):
             DummyTask(**DUMMY_TASK_OK_PARAMS)
         self.assertEqual(len(w), 0, msg='No warning should be raised when correct parameter types are used')
 
-    if six.PY3:  # assertWarnsRegex was introduced in Python 3.2
-        def test_warn_on_non_str_param(self):
-            params = dict(**DUMMY_TASK_OK_PARAMS)
-            params['param'] = 42
-            with self.assertWarnsRegex(UserWarning, 'Parameter "param" with value "42" is not of type string.'):
-                DummyTask(**params)
+    def test_warn_on_non_str_param(self):
+        params = dict(**DUMMY_TASK_OK_PARAMS)
+        params['param'] = 42
+        with self.assertWarnsRegex(UserWarning, 'Parameter "param" with value "42" is not of type string.'):
+            DummyTask(**params)
 
-        def test_warn_on_non_timedelta_param(self):
-            params = dict(**DUMMY_TASK_OK_PARAMS)
+    def test_warn_on_non_timedelta_param(self):
+        params = dict(**DUMMY_TASK_OK_PARAMS)
 
-            class MockTimedelta(object):
-                days = 1
-                seconds = 1
+        class MockTimedelta:
+            days = 1
+            seconds = 1
 
-            params['timedelta_param'] = MockTimedelta()
-            with self.assertWarnsRegex(UserWarning, 'Parameter "timedelta_param" with value ".*" is not of type timedelta.'):
-                DummyTask(**params)
+        params['timedelta_param'] = MockTimedelta()
+        with self.assertWarnsRegex(UserWarning, 'Parameter "timedelta_param" with value ".*" is not of type timedelta.'):
+            DummyTask(**params)
 
 
 class ExternalizeTaskTest(LuigiTestCase):

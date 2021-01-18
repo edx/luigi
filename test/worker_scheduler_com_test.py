@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2017 Spotify AB
 #
@@ -15,7 +14,6 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
 
 import os
 import time
@@ -47,7 +45,7 @@ class WorkerSchedulerCommunicationTest(LuigiTestCase):
             # also save scheduler's worker struct
             self.sw = self.sch._state.get_worker(self.w._id)
 
-            super(WorkerSchedulerCommunicationTest, self).run(result)
+            super().run(result)
 
     def wrapper_task(test_self):
         tmp = tempfile.mkdtemp()

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -27,7 +26,6 @@ This module contains the main() method which will be used to run the
 mapper, combiner, or reducer on the Hadoop nodes.
 """
 
-from __future__ import print_function
 
 try:
     import cPickle as pickle
@@ -40,7 +38,7 @@ import tarfile
 import traceback
 
 
-class Runner(object):
+class Runner:
     """
     Run the mapper, combiner, or reducer on hadoop nodes.
     """

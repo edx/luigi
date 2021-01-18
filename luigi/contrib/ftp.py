@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -233,7 +232,7 @@ class RemoteFileSystem(luigi.target.FileSystem):
             ftp.cwd(wd)  # do not delete the folder that we are in
             ftp.rmd(path)
         except ftplib.all_errors as e:
-            print('_rm_recursive: Could not remove {0}: {1}'.format(path, e))
+            print(f'_rm_recursive: Could not remove {path}: {e}')
 
     def put(self, local_path, path, atomic=True):
         """
@@ -354,7 +353,7 @@ class AtomicFtpFile(luigi.target.AtomicLocalFile):
         :type path: str
         """
         self._fs = fs
-        super(AtomicFtpFile, self).__init__(path)
+        super().__init__(path)
 
     def move_to_final_destination(self):
         self._fs.put(self.tmp_path, self.path)

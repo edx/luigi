@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -90,9 +89,9 @@ class CopyToTable(luigi.task.MixinNaiveBulkComplete, luigi.Task):
         elif len(self.columns[0]) == 2:
             # if columns is specified as (name, type) tuples
             coldefs = ','.join(
-                '{name} {type}'.format(name=name, type=type) for name, type in self.columns
+                f'{name} {type}' for name, type in self.columns
             )
-            query = "CREATE TABLE {table} ({coldefs})".format(table=self.table, coldefs=coldefs)
+            query = f"CREATE TABLE {self.table} ({coldefs})"
             connection.cursor().execute(query)
 
     @property

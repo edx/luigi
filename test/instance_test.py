@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -45,7 +44,7 @@ class InstanceTest(unittest.TestCase):
 
             def __init__(self):
                 self.has_run = False
-                super(A, self).__init__()
+                super().__init__()
 
             def run(self):
                 self.has_run = True

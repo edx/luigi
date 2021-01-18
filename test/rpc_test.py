@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -18,7 +17,7 @@ from helpers import unittest
 try:
     from unittest import mock
 except ImportError:
-    import mock
+    from unittest import mock
 
 import luigi.rpc
 from luigi.scheduler import Scheduler
@@ -97,7 +96,7 @@ class RPCTest(scheduler_api_test.SchedulerApiTest, ServerTestBase):
         return luigi.server.app(sch)
 
     def setUp(self):
-        super(RPCTest, self).setUp()
+        super().setUp()
         self.sch = luigi.rpc.RemoteScheduler(self.get_url(''))
         self.sch._wait = lambda: None
 

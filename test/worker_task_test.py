@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -19,7 +18,7 @@ from subprocess import check_call
 import sys
 
 from helpers import LuigiTestCase
-import mock
+from unittest import mock
 from psutil import Process
 from time import sleep
 

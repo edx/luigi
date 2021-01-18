@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -203,7 +202,7 @@ def send_email_smtp(sender, subject, message, recipients, image_png):
         msg_root = generate_email(sender, subject, message, recipients, image_png)
 
         smtp_conn.sendmail(sender, recipients, msg_root.as_string())
-    except socket.error as exception:
+    except OSError as exception:
         logger.error("Not able to connect to smtp server: %s", exception)
 
 
@@ -358,7 +357,7 @@ def _prefix(subject):
     this prefix.
     """
     if email().prefix:
-        return "{} {}".format(email().prefix, subject)
+        return f"{email().prefix} {subject}"
     else:
         return subject
 

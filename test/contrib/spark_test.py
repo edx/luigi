@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -26,7 +25,7 @@ from luigi.mock import MockTarget
 from helpers import with_config, temporary_unloaded_module
 from luigi.contrib.external_program import ExternalProgramRunError
 from luigi.contrib.spark import SparkSubmitTask, PySparkTask
-from mock import patch, call, MagicMock
+from unittest.mock import patch, call, MagicMock
 
 BytesIO = six.BytesIO
 
@@ -145,7 +144,7 @@ class SparkSubmitTaskTest(unittest.TestCase):
             job.run()
         except ExternalProgramRunError as e:
             self.assertEqual(e.err, 'spark test error')
-            self.assertIn('spark test error', six.text_type(e))
+            self.assertIn('spark test error', str(e))
             self.assertIn(call.info('Program stderr:\nspark test error'),
                           logger.mock_calls)
         else:

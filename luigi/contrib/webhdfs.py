@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -23,7 +22,6 @@ contrib module. You can consider migrating to
 :class:`luigi.contrib.hdfs.webhdfs_client.WebHdfsClient`
 """
 
-from __future__ import absolute_import
 
 import logging
 
@@ -40,7 +38,7 @@ class WebHdfsTarget(FileSystemTarget):
     fs = None
 
     def __init__(self, path, client=None, format=None):
-        super(WebHdfsTarget, self).__init__(path)
+        super().__init__(path)
         path = self.path
         self.fs = client or WebHdfsClient()
         if format is None:
@@ -62,7 +60,7 @@ class WebHdfsTarget(FileSystemTarget):
         )
 
 
-class ReadableWebHdfsFile(object):
+class ReadableWebHdfsFile:
 
     def __init__(self, path, client):
         self.path = path
@@ -89,7 +87,7 @@ class ReadableWebHdfsFile(object):
         has_next = True
         while has_next:
             try:
-                chunk = six.next(self.generator)
+                chunk = next(self.generator)
                 yield chunk
             except StopIteration:
                 has_next = False
@@ -106,7 +104,7 @@ class AtomicWebHdfsFile(AtomicLocalFile):
 
     def __init__(self, path, client):
         self.client = client
-        super(AtomicWebHdfsFile, self).__init__(path)
+        super().__init__(path)
 
     def move_to_final_destination(self):
         if not self.client.exists(self.path):

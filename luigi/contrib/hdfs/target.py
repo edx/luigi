@@ -35,7 +35,7 @@ class HdfsTarget(FileSystemTarget):
         if path is None:
             assert is_tmp
             path = tmppath()
-        super(HdfsTarget, self).__init__(path)
+        super().__init__(path)
 
         if format is None:
             format = luigi.format.get_default_format() >> hdfs_format.Plain

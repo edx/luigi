@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2016 VNG Corporation
 #
@@ -14,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from __future__ import print_function
 
 from helpers import LuigiTestCase
 from luigi.scheduler import Scheduler
@@ -37,7 +35,7 @@ class WorkerKeepAliveUpstreamTest(LuigiTestCase):
 
         with Worker(scheduler=self.sch, worker_id='X', keep_alive=True, wait_interval=0.1, wait_jitter=0) as w:
             self.w = w
-            super(WorkerKeepAliveUpstreamTest, self).run(result)
+            super().run(result)
 
     def test_alive_while_has_failure(self):
         """

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -15,7 +14,6 @@
 # limitations under the License.
 #
 
-from __future__ import print_function
 import luigi
 from luigi.contrib.ftp import RemoteTarget
 

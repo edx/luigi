@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -41,7 +40,7 @@ class SnakebiteHdfsClient(hdfs_abstract_client.HdfsFileSystem):
     """
 
     def __init__(self):
-        super(SnakebiteHdfsClient, self).__init__()
+        super().__init__()
         self._bite = None
         self.pid = -1
 
@@ -51,7 +50,7 @@ class SnakebiteHdfsClient(hdfs_abstract_client.HdfsFileSystem):
             return path
         # TODO: Should this be:
         # isinstance(path, (six.text_type, six.binary_type))?
-        if isinstance(path, six.string_types):
+        if isinstance(path, str):
             return [path, ]
         return [str(path), ]
 
@@ -62,10 +61,10 @@ class SnakebiteHdfsClient(hdfs_abstract_client.HdfsFileSystem):
         config = hdfs_config.hdfs()
         if self.pid != os.getpid() or not self._bite:
             client_kwargs = dict(filter(
-                lambda k_v: k_v[1] is not None and k_v[1] != '', six.iteritems({
+                lambda k_v: k_v[1] is not None and k_v[1] != '', {
                     'hadoop_version': config.client_version,
                     'effective_user': config.effective_user,
-                })
+                }.items()
             ))
             if config.snakebite_autoconfig:
                 """
@@ -126,7 +125,7 @@ class SnakebiteHdfsClient(hdfs_abstract_client.HdfsFileSystem):
             raise luigi.target.FileAlreadyExists()
 
     def remove(self, path, recursive=True, skip_trash=False):
-        """
+        r"""
         Use snakebite.delete, if available.
 
         :param path: delete-able file(s) or directory(ies)
@@ -140,7 +139,7 @@ class SnakebiteHdfsClient(hdfs_abstract_client.HdfsFileSystem):
         return list(self.get_bite().delete(self.list_path(path), recurse=recursive))
 
     def chmod(self, path, permissions, recursive=False):
-        """
+        r"""
         Use snakebite.chmod, if available.
 
         :param path: update-able file(s)
@@ -223,7 +222,7 @@ class SnakebiteHdfsClient(hdfs_abstract_client.HdfsFileSystem):
                                                 local_destination))
 
     def mkdir(self, path, parents=True, mode=0o755, raise_if_exists=False):
-        """
+        r"""
         Use snakebite.mkdir, if available.
 
         Snakebite's mkdir method allows control over full path creation, so by

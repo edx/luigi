@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -182,7 +181,7 @@ class CopyToIndexTest(unittest.TestCase):
         self.assertTrue(self.es.indices.exists(task.index))
         self.assertTrue(task.complete())
         self.assertEqual(1, self.es.count(index=task.index).get('count'))
-        self.assertEqual({u'date': u'today', u'name': u'sample'},
+        self.assertEqual({'date': 'today', 'name': 'sample'},
                          self.es.get_source(index=task.index,
                                             doc_type=task.doc_type, id=123))
 
@@ -202,11 +201,11 @@ class CopyToIndexTest(unittest.TestCase):
         self.assertEqual(2, self.es.count(index=task1.index).get('count'))
         self.assertEqual(2, self.es.count(index=task2.index).get('count'))
 
-        self.assertEqual({u'date': u'today', u'name': u'sample'},
+        self.assertEqual({'date': 'today', 'name': 'sample'},
                          self.es.get_source(index=task1.index,
                                             doc_type=task1.doc_type, id=123))
 
-        self.assertEqual({u'date': u'today', u'name': u'another'},
+        self.assertEqual({'date': 'today', 'name': 'another'},
                          self.es.get_source(index=task2.index,
                                             doc_type=task2.doc_type, id=234))
 
@@ -221,7 +220,7 @@ class CopyToIndexTest(unittest.TestCase):
         self.assertTrue(task3.complete())
         self.assertEqual(1, self.es.count(index=task3.index).get('count'))
 
-        self.assertEqual({u'date': u'today', u'name': u'yet another'},
+        self.assertEqual({'date': 'today', 'name': 'yet another'},
                          self.es.get_source(index=task3.index,
                                             doc_type=task3.doc_type, id=234))
 

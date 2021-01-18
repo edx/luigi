@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2015 Twitter Inc
 #
@@ -144,8 +143,7 @@ class GCSClient(luigi.target.FileSystem):
         response = request.execute()
 
         while response is not None:
-            for it in response.get('items', []):
-                yield it
+            yield from response.get('items', [])
 
             request = self.client.objects().list_next(request, response)
             if request is None:
@@ -218,7 +216,7 @@ class GCSClient(luigi.target.FileSystem):
 
         if self._is_root(obj):
             raise InvalidDeleteException(
-                'Cannot delete root of bucket at path {}'.format(path))
+                f'Cannot delete root of bucket at path {path}')
 
         if self._obj_exists(bucket, obj):
             self.client.objects().delete(bucket=bucket, object=obj).execute()
@@ -228,7 +226,7 @@ class GCSClient(luigi.target.FileSystem):
         if self.isdir(path):
             if not recursive:
                 raise InvalidDeleteException(
-                    'Path {} is a directory. Must use recursive delete'.format(path))
+                    f'Path {path} is a directory. Must use recursive delete')
 
             req = http.BatchHttpRequest()
             for it in self._list_iter(bucket, self._add_path_delimiter(obj)):
@@ -251,8 +249,8 @@ class GCSClient(luigi.target.FileSystem):
 
     def put_string(self, contents, dest_path, mimetype=None):
         mimetype = mimetype or mimetypes.guess_type(dest_path)[0] or DEFAULT_MIMETYPE
-        assert isinstance(mimetype, six.string_types)
-        if not isinstance(contents, six.binary_type):
+        assert isinstance(mimetype, str)
+        if not isinstance(contents, bytes):
             contents = contents.encode("utf-8")
         media = http.MediaIoBaseUpload(six.BytesIO(contents), mimetype, resumable=bool(contents))
         self._do_put(media, dest_path)
@@ -396,7 +394,7 @@ class GCSClient(luigi.target.FileSystem):
 
 class _DeleteOnCloseFile(io.FileIO):
     def close(self):
-        super(_DeleteOnCloseFile, self).close()
+        super().close()
         try:
             os.remove(self.name)
         except OSError:
@@ -421,7 +419,7 @@ class AtomicGCSFile(luigi.target.AtomicLocalFile):
 
     def __init__(self, path, gcs_client):
         self.gcs_client = gcs_client
-        super(AtomicGCSFile, self).__init__(path)
+        super().__init__(path)
 
     def move_to_final_destination(self):
         self.gcs_client.put(self.tmp_path, self.path)
@@ -431,7 +429,7 @@ class GCSTarget(luigi.target.FileSystemTarget):
     fs = None
 
     def __init__(self, path, format=None, client=None):
-        super(GCSTarget, self).__init__(path)
+        super().__init__(path)
         if format is None:
             format = luigi.format.get_default_format()
 
@@ -444,7 +442,7 @@ class GCSTarget(luigi.target.FileSystemTarget):
         elif mode == 'w':
             return self.format.pipe_writer(AtomicGCSFile(self.path, self.fs))
         else:
-            raise ValueError("Unsupported open mode '{}'".format(mode))
+            raise ValueError(f"Unsupported open mode '{mode}'")
 
 
 class GCSFlagTarget(GCSTarget):
@@ -486,7 +484,7 @@ class GCSFlagTarget(GCSTarget):
         if path[-1] != "/":
             raise ValueError("GCSFlagTarget requires the path to be to a "
                              "directory.  It must end with a slash ( / ).")
-        super(GCSFlagTarget, self).__init__(path, format=format, client=client)
+        super().__init__(path, format=format, client=client)
         self.format = format
         self.fs = client or GCSClient()
         self.flag = flag

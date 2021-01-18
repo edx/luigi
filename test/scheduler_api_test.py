@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -16,7 +15,7 @@
 #
 
 import itertools
-import mock
+from unittest import mock
 import time
 from helpers import unittest
 from nose.plugins.attrib import attr
@@ -32,7 +31,7 @@ WORKER = 'myworker'
 class SchedulerApiTest(unittest.TestCase):
 
     def setUp(self):
-        super(SchedulerApiTest, self).setUp()
+        super().setUp()
         conf = self.get_scheduler_config()
         self.sch = Scheduler(**conf)
         self.time = time.time
@@ -49,7 +48,7 @@ class SchedulerApiTest(unittest.TestCase):
         }
 
     def tearDown(self):
-        super(SchedulerApiTest, self).tearDown()
+        super().tearDown()
         if time.time != self.time:
             time.time = self.time
 
@@ -1287,11 +1286,11 @@ class SchedulerApiTest(unittest.TestCase):
 
     def test_interleave_resource_change_and_get_work(self):
         for i in range(100):
-            self.sch.add_task(worker=WORKER, task_id='A{}'.format(i), resources={'a': 1}, priority=100-i)
+            self.sch.add_task(worker=WORKER, task_id=f'A{i}', resources={'a': 1}, priority=100-i)
 
         for i in range(100):
             self.sch.get_work(worker=WORKER)
-            self.sch.add_task(worker='other', task_id='A{}'.format(i), resources={'b': 1}, priority=100-i)
+            self.sch.add_task(worker='other', task_id=f'A{i}', resources={'b': 1}, priority=100-i)
 
         # we should only see 1 task  per resource rather than all 100 tasks running
         self.assertEqual(2, len(self.sch.task_list(RUNNING, '')))
@@ -1950,10 +1949,10 @@ class SchedulerApiTest(unittest.TestCase):
         not_nurtured_statuses = [DONE, UNKNOWN, DISABLED, PENDING, FAILED]
 
         for status in nurtured_statuses:
-            self.assertEqual(set([status.lower()]), set(self.sch.task_list(status, '')))
+            self.assertEqual({status.lower()}, set(self.sch.task_list(status, '')))
 
         for status in not_nurtured_statuses:
-            self.assertEqual(set([]), set(self.sch.task_list(status, '')))
+            self.assertEqual(set(), set(self.sch.task_list(status, '')))
 
         self.assertEqual(1, len(self.sch.task_list(None, '')))  # None == All statuses
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -224,8 +223,7 @@ from luigi import six
 from luigi import task
 from luigi import parameter
 
-if six.PY3:
-    xrange = range
+xrange = range
 
 logger = logging.getLogger('luigi-interface')
 
@@ -242,12 +240,12 @@ def common_params(task_instance, task_cls):
     task_cls_param_names = task_cls_params_dict.keys()
     common_param_names = set(task_instance_param_names).intersection(set(task_cls_param_names))
     common_param_vals = [(key, task_cls_params_dict[key]) for key in common_param_names]
-    common_kwargs = dict((key, task_instance.param_kwargs[key]) for key in common_param_names)
+    common_kwargs = {key: task_instance.param_kwargs[key] for key in common_param_names}
     vals = dict(task_instance.get_param_values(common_param_vals, [], common_kwargs))
     return vals
 
 
-class inherits(object):
+class inherits:
     """
     Task inheritance.
 
@@ -270,7 +268,7 @@ class inherits(object):
     """
 
     def __init__(self, task_to_inherit):
-        super(inherits, self).__init__()
+        super().__init__()
         self.task_to_inherit = task_to_inherit
 
     def __call__(self, task_that_inherits):
@@ -289,13 +287,13 @@ class inherits(object):
         return task_that_inherits
 
 
-class requires(object):
+class requires:
     """
     Same as @inherits, but also auto-defines the requires method.
     """
 
     def __init__(self, task_to_require):
-        super(requires, self).__init__()
+        super().__init__()
         self.inherit_decorator = inherits(task_to_require)
 
     def __call__(self, task_that_requires):
@@ -309,7 +307,7 @@ class requires(object):
         return task_that_requires
 
 
-class copies(object):
+class copies:
     """
     Auto-copies a task.
 
@@ -324,7 +322,7 @@ class copies(object):
     """
 
     def __init__(self, task_to_copy):
-        super(copies, self).__init__()
+        super().__init__()
         self.requires_decorator = requires(task_to_copy)
 
     def __call__(self, task_that_copies):

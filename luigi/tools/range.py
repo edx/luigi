@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2014 Spotify AB
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -115,7 +114,7 @@ class RangeBase(luigi.WrapperTask):
         """
         DONT USE. Will be deleted soon. Use ``self.of``!
         """
-        if isinstance(self.of, six.string_types):
+        if isinstance(self.of, str):
             warnings.warn('When using Range programatically, dont pass "of" param as string!')
             return Register.get_task_cls(self.of)
         return self.of
@@ -513,11 +512,11 @@ def _constrain_glob(glob, paths, limit=5):
             # no wildcard expressions left to specialize in the glob
             return list(current.keys())
         char_sets = {}
-        for g, p in six.iteritems(current):
+        for g, p in current.items():
             char_sets[g] = sorted({path[pos] for path in p})
         if sum(len(s) for s in char_sets.values()) > limit:
             return [g.replace('[0-9]', digit_set_wildcard(char_sets[g]), 1) for g in current]
-        for g, s in six.iteritems(char_sets):
+        for g, s in char_sets.items():
             for c in s:
                 new_glob = g.replace('[0-9]', c, 1)
                 new_paths = list(filter(lambda p: p[pos] == c, current[g]))
@@ -533,7 +532,7 @@ def most_common(items):
     for i in items:
         counts.setdefault(i, 0)
         counts[i] += 1
-    return max(six.iteritems(counts), key=operator.itemgetter(1))
+    return max(counts.items(), key=operator.itemgetter(1))
 
 
 def _get_per_location_glob(tasks, outputs, regexes):

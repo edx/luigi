@@ -8,7 +8,7 @@ from luigi import six
 from luigi.six.moves.urllib.request import urlopen
 
 
-class LuigiGrep(object):
+class LuigiGrep:
 
     def __init__(self, host, port):
         self._host = host
@@ -16,7 +16,7 @@ class LuigiGrep(object):
 
     @property
     def graph_url(self):
-        return "http://{0}:{1}/api/graph".format(self._host, self._port)
+        return f"http://{self._host}:{self._port}/api/graph"
 
     def _fetch_json(self):
         """Returns the json representation of the dep graph"""
@@ -74,10 +74,10 @@ def main():
 
     for job in results:
         print("{name}: {status}, Dependencies:".format(name=job['name'], status=job['status']))
-        for (status, jobs) in six.iteritems(job['deps_by_status']):
-            print("  status={status}".format(status=status))
+        for (status, jobs) in job['deps_by_status'].items():
+            print(f"  status={status}")
             for job in jobs:
-                print("    {job}".format(job=job))
+                print(f"    {job}")
 
 
 if __name__ == '__main__':

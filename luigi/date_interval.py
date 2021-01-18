@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -31,18 +30,16 @@ Now, you can launch this from the command line using
 ``--date-interval 2014`` (for a year) and some other notations.
 """
 
-from __future__ import division
 
 from luigi import six
 
 import datetime
 import re
 
-if six.PY3:
-    xrange = range
+xrange = range
 
 
-class DateInterval(object):
+class DateInterval:
 
     """
     The :class:`DateInterval` is the base class with subclasses :class:`Date`, :class:`Week`, :class:`Month`, :class:`Year`, and :class:`Custom`.
@@ -115,8 +112,7 @@ class DateInterval(object):
         return date in self.dates()
 
     def __iter__(self):
-        for d in self.dates():
-            yield d
+        yield from self.dates()
 
     def __hash__(self):
         return hash(repr(self))
@@ -167,7 +163,7 @@ class Date(DateInterval):
     def __init__(self, y, m, d):
         a = datetime.date(y, m, d)
         b = datetime.date(y, m, d) + datetime.timedelta(1)
-        super(Date, self).__init__(a, b)
+        super().__init__(a, b)
 
     def to_string(self):
         return self.date_a.strftime('%Y-%m-%d')
@@ -198,7 +194,7 @@ class Week(DateInterval):
         else:
             raise ValueError('Invalid week')
         date_b = date_a + datetime.timedelta(7)
-        super(Week, self).__init__(date_a, date_b)
+        super().__init__(date_a, date_b)
 
     def to_string(self):
         return '%d-W%02d' % self.date_a.isocalendar()[:2]
@@ -219,7 +215,7 @@ class Month(DateInterval):
     def __init__(self, y, m):
         date_a = datetime.date(y, m, 1)
         date_b = datetime.date(y + m // 12, 1 + m % 12, 1)
-        super(Month, self).__init__(date_a, date_b)
+        super().__init__(date_a, date_b)
 
     def to_string(self):
         return self.date_a.strftime('%Y-%m')
@@ -240,7 +236,7 @@ class Year(DateInterval):
     def __init__(self, y):
         date_a = datetime.date(y, 1, 1)
         date_b = datetime.date(y + 1, 1, 1)
-        super(Year, self).__init__(date_a, date_b)
+        super().__init__(date_a, date_b)
 
     def to_string(self):
         return self.date_a.strftime('%Y')

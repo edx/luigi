@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2015 VNG Corporation
 #
@@ -30,7 +29,7 @@ class WebHdfsTargetTest(WebHdfsMiniClusterTestCase, HdfsTargetTestMixin):
         conf = {'hdfs': {'client': 'webhdfs'},
                 'webhdfs': {'port': str(self.cluster.webhdfs_port)},
                 }
-        with_config(conf)(super(WebHdfsTargetTest, self).run)(result)
+        with_config(conf)(super().run)(result)
 
     def test_actually_using_webhdfs(self):
         self.assertTrue(isinstance(self.create_target().fs, WebHdfsClient))

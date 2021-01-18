@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -20,7 +19,7 @@ import fnmatch
 from helpers import unittest, LuigiTestCase
 
 import luigi
-import mock
+from unittest import mock
 from luigi.mock import MockTarget, MockFileSystem
 from luigi.tools.range import (RangeDaily, RangeDailyBase, RangeEvent,
                                RangeHourly, RangeHourlyBase,
@@ -159,8 +158,7 @@ class CommonWrapperTaskMinutes(luigi.WrapperTask):
 
 def mock_listdir(contents):
     def contents_listdir(_, glob):
-        for path in fnmatch.filter(contents, glob + '*'):
-            yield path
+        yield from fnmatch.filter(contents, glob + '*')
 
     return contents_listdir
 
@@ -1166,7 +1164,7 @@ class RangeInstantiationTest(LuigiTestCase):
                 MyTask.secret = 'yay'
 
         now = str(int(datetime_to_epoch(datetime.datetime(2015, 12, 2))))
-        self.run_locally_split('RangeDailyBase --of wohoo.MyTask --now {now} --start 2015-12-01 --stop 2015-12-02'.format(now=now))
+        self.run_locally_split(f'RangeDailyBase --of wohoo.MyTask --now {now} --start 2015-12-01 --stop 2015-12-02')
         self.assertEqual(MyTask(date_param=datetime.date(1934, 12, 1)).secret, 'yay')
 
     def test_param_name(self):
@@ -1239,5 +1237,5 @@ class RangeInstantiationTest(LuigiTestCase):
 
         now = str(int(datetime_to_epoch(datetime.datetime(2015, 12, 2))))
         self.run_locally(['RangeDailyBase', '--of', 'wohoo.MyTask', '--of-params', '{"arbitrary_param":"bar","arbitrary_integer_param":5}',
-                          '--now', '{0}'.format(now), '--start', '2015-12-01', '--stop', '2015-12-02'])
+                          '--now', f'{now}', '--start', '2015-12-01', '--stop', '2015-12-02'])
         self.assertEqual(MyTask.state, ('bar', 5))

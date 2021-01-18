@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -109,7 +108,7 @@ class HadoopJarJobRunner(luigi.contrib.hadoop.JobRunner):
             if ssh_config.get("no_host_key_check", False):
                 arglist += ['-o', 'UserKnownHostsFile=/dev/null',
                             '-o', 'StrictHostKeyChecking=no']
-            arglist.append('{}@{}'.format(username, host))
+            arglist.append(f'{username}@{host}')
             hadoop_arglist = [pipes.quote(arg) for arg in hadoop_arglist]
             arglist.append(' '.join(hadoop_arglist))
         else:

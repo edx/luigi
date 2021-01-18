@@ -14,7 +14,7 @@
 
 import luigi
 import luigi.contrib.redshift
-import mock
+from unittest import mock
 from helpers import with_config
 
 import os

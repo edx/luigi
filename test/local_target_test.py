@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -14,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from __future__ import print_function
 
 import bz2
 import gzip
@@ -22,7 +20,7 @@ import os
 import random
 import shutil
 from helpers import unittest
-import mock
+from unittest import mock
 
 import luigi.format
 from luigi import LocalTarget
@@ -159,7 +157,7 @@ class LocalTargetTest(unittest.TestCase, FileSystemTargetTestMixin):
     def test_format_chain(self):
         UTF8WIN = luigi.format.TextFormat(encoding='utf8', newline='\r\n')
         t = LocalTarget(self.path, UTF8WIN >> luigi.format.Gzip)
-        a = u'我é\nçф'
+        a = '我é\nçф'
 
         with t.open('w') as f:
             f.write(a)
@@ -180,7 +178,7 @@ class LocalTargetTest(unittest.TestCase, FileSystemTargetTestMixin):
         with t.open('r') as f:
             b = f.read()
 
-        self.assertEqual(u'我é\nçф', b)
+        self.assertEqual('我é\nçф', b)
 
     @mock.patch('os.linesep', '\r\n')
     def test_format_newline(self):
@@ -217,7 +215,7 @@ class LocalTargetTest(unittest.TestCase, FileSystemTargetTestMixin):
                 io.FileIO(t.path, mode).close()
             except ValueError:
                 pass
-            except IOError as err:
+            except OSError as err:
                 if err.errno == EEXIST:
                     modes.add(mode)
                 else:

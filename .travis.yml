@@ -1,9 +1,12 @@
 language: python
+python: 3.8
+dist: xenial
 
 services:
   - elasticsearch
   - mysql
   - docker
+  - postgresql
 
 env:
   global:
@@ -15,40 +18,55 @@ env:
     - BQ_TEST_PROJECT_ID=luigi-travistestenvironment
     - BQ_TEST_INPUT_BUCKET=luigi-bigquery-test
     - GOOGLE_APPLICATION_CREDENTIALS=test/gcloud-credentials.json
-  matrix:
-    - TOXENV=flake8
-    - TOXENV=docs
-    - TOXENV=py27-nonhdfs
-    - TOXENV=py34-nonhdfs
-    - TOXENV=py27-unixsocket
-      # - TOXENV=py27-cdh
-      # minicluster (cdh) tests disabled as lack of love, #2140.
-      # Sometimes it runs too slow for Travis. And sometimes it crashes on downloading cdh
-    # - TOXENV=pypy-scheduler # Disabled to unbreak https://github.com/spotify/luigi/pull/2190
-    # - TOXENV=py27-gcloud # At least broken as of  https://github.com/spotify/luigi/pull/1917
-    - TOXENV=py27-postgres
-      # - TOXENV=visualiser
-      # Disabling this test because of intermittent failures :-/
+    - AWS_DEFAULT_REGION=us-east-1
+    - AWS_ACCESS_KEY_ID=accesskey
+    - AWS_SECRET_ACCESS_KEY=secretkey
 
-# Python 3.5 has to go here until Travis adds it to the default build images.
-# https://github.com/travis-ci/travis-ci/issues/4794#issuecomment-143758799
-matrix:
-  include:
-    - python: 3.5
-      env: TOXENV=py35-nonhdfs
-    - python: 3.6
-      env: TOXENV=py36-nonhdfs
-    - python: 3.6
-      env: TOXENV=py36-unixsocket
 
 sudo: false
+
+# Python 3.7 needs to have its dist/sudo flags set in matrix so they don't
+# break the other python builds.
+# https://github.com/travis-ci/travis-ci/issues/9815
+matrix:
+  include:
+    - env: TOXENV=flake8
+    - env: TOXENV=docs
+
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env: TOXENV=py38-core
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env: TOXENV=py38-dropbox
+      if: env(DROPBOX_APP_TOKEN) is present
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env: TOXENV=py38-unixsocket
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env: TOXENV=py38-apache
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env: TOXENV=py38-aws
+    - python: 3.8
+      dist: xenial
+      sudo: true
+      env: TOXENV=py38-azureblob
+    - python: 3.8
+      env: TOXENV=py38-postgres
 
 cache:
   directories:
     - $HOME/.pip-cache
 
 install:
-  - pip install 'tox<3.0'
+  - pip install requirements/ci.txt
 
 before_install:
   - openssl aes-256-cbc -K $encrypted_e05f6ccc270e_key -iv $encrypted_e05f6ccc270e_iv -in test/gcloud-credentials.json.enc -out test/gcloud-credentials.json -d
@@ -68,6 +86,3 @@ script:
 branches:
   only:
     - master
-
-notifications:
-  email: false

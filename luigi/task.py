@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -145,8 +144,7 @@ class BulkCompleteNotImplementedError(NotImplementedError):
     pass
 
 
-@six.add_metaclass(Register)
-class Task(object):
+class Task(metaclass=Register):
     """
     This is the base class of all Luigi Tasks, the base unit of work in Luigi.
 
@@ -241,7 +239,7 @@ class Task(object):
         owner_email = self.owner_email
         if owner_email is None:
             return []
-        elif isinstance(owner_email, six.string_types):
+        elif isinstance(owner_email, str):
             return owner_email.split(',')
         else:
             return owner_email
@@ -266,7 +264,7 @@ class Task(object):
         """
         Trigger that calls all of the specified events associated with this class.
         """
-        for event_class, event_callbacks in six.iteritems(self._event_callbacks):
+        for event_class, event_callbacks in self._event_callbacks.items():
             if not isinstance(self, event_class):
                 continue
             for callback in event_callbacks.get(event, []):
@@ -340,7 +338,7 @@ class Task(object):
         if not cls.get_task_namespace():
             return cls.__name__
         else:
-            return "{}.{}".format(cls.get_task_namespace(), cls.__name__)
+            return f"{cls.get_task_namespace()}.{cls.__name__}"
 
     @classmethod
     def get_params(cls):
@@ -397,7 +395,7 @@ class Task(object):
             result[param_name] = param_obj.normalize(arg)
 
         # Then the keyword arguments
-        for param_name, arg in six.iteritems(kwargs):
+        for param_name, arg in kwargs.items():
             if param_name in result:
                 raise parameter.DuplicateParameterException('%s: parameter %s was already set as a positional parameter' % (exc_desc, param_name))
             if param_name not in params_dict:
@@ -448,7 +446,7 @@ class Task(object):
 
     def _warn_on_wrong_param_types(self):
         params = dict(self.get_params())
-        for param_name, param_value in six.iteritems(self.param_kwargs):
+        for param_name, param_value in self.param_kwargs.items():
             params[param_name]._warn_on_wrong_param_type(param_name, param_value)
 
     @classmethod
@@ -475,7 +473,7 @@ class Task(object):
         """
         params_str = {}
         params = dict(self.get_params())
-        for param_name, param_value in six.iteritems(self.param_kwargs):
+        for param_name, param_value in self.param_kwargs.items():
             if (not only_significant) or params[param_name].significant:
                 params_str[param_name] = params[param_name].serialize(param_value)
 
@@ -691,11 +689,11 @@ class Task(object):
 
         yield
 
-        for property_name, value in six.iteritems(reserved_properties):
+        for property_name, value in reserved_properties.items():
             setattr(self, property_name, value)
 
 
-class MixinNaiveBulkComplete(object):
+class MixinNaiveBulkComplete:
     """
     Enables a Task to be efficiently scheduled with e.g. range tools, by providing a bulk_complete implementation which checks completeness in a loop.
 
@@ -818,7 +816,7 @@ def getpaths(struct):
     if isinstance(struct, Task):
         return struct.output()
     elif isinstance(struct, dict):
-        return struct.__class__((k, getpaths(v)) for k, v in six.iteritems(struct))
+        return struct.__class__((k, getpaths(v)) for k, v in struct.items())
     elif isinstance(struct, (list, tuple)):
         return struct.__class__(getpaths(r) for r in struct)
     else:
@@ -848,10 +846,10 @@ def flatten(struct):
         return []
     flat = []
     if isinstance(struct, dict):
-        for _, result in six.iteritems(struct):
+        for _, result in struct.items():
             flat += flatten(result)
         return flat
-    if isinstance(struct, six.string_types):
+    if isinstance(struct, str):
         return [struct]
 
     try:

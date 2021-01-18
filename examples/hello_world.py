@@ -14,7 +14,7 @@ class HelloWorldTask(luigi.Task):
     task_namespace = 'examples'
 
     def run(self):
-        print("{task} says: Hello world!".format(task=self.__class__.__name__))
+        print(f"{self.__class__.__name__} says: Hello world!")
 
 
 if __name__ == '__main__':

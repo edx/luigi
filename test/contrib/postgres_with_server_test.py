@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -79,7 +78,7 @@ class TestPostgresTask(CopyToTestDB):
         yield 'foo', 123, 123.45
         yield None, '-100', '5143.213'
         yield '\t\n\r\\N', 0, 0
-        yield u'éцү我', 0, 0
+        yield 'éцү我', 0, 0
         yield '', 0, r'\N'  # Test working default null charcter
 
 
@@ -123,8 +122,8 @@ class TestPostgresImportTask(unittest.TestCase):
         conn = task.output().connect()
         conn.autocommit = True
         cursor = conn.cursor()
-        cursor.execute('DROP TABLE IF EXISTS {table}'.format(table=task.table))
-        cursor.execute('DROP TABLE IF EXISTS {marker_table}'.format(marker_table=postgres.PostgresTarget.marker_table))
+        cursor.execute(f'DROP TABLE IF EXISTS {task.table}')
+        cursor.execute(f'DROP TABLE IF EXISTS {postgres.PostgresTarget.marker_table}')
 
         luigi.build([task], local_scheduler=True)
         luigi.build([task], local_scheduler=True)  # try to schedule twice
@@ -139,37 +138,37 @@ class TestPostgresImportTask(unittest.TestCase):
             ('foo', 123, 123.45),
             (None, -100, 5143.213),
             ('\t\n\r\\N', 0.0, 0),
-            (u'éцү我', 0, 0),
-            (u'', 0, None),  # Test working default null charcter
+            ('éцү我', 0, 0),
+            ('', 0, None),  # Test working default null charcter
         ))
 
     def test_multimetric(self):
         metrics = MetricBase()
         conn = metrics.output().connect()
         conn.autocommit = True
-        conn.cursor().execute('DROP TABLE IF EXISTS {table}'.format(table=metrics.table))
-        conn.cursor().execute('DROP TABLE IF EXISTS {marker_table}'.format(marker_table=postgres.PostgresTarget.marker_table))
+        conn.cursor().execute(f'DROP TABLE IF EXISTS {metrics.table}')
+        conn.cursor().execute(f'DROP TABLE IF EXISTS {postgres.PostgresTarget.marker_table}')
         luigi.build([Metric1(20), Metric1(21), Metric2("foo")], local_scheduler=True)
 
         cursor = conn.cursor()
-        cursor.execute('select count(*) from {table}'.format(table=metrics.table))
+        cursor.execute(f'select count(*) from {metrics.table}')
         self.assertEqual(tuple(cursor), ((9,),))
 
     def test_clear(self):
         class Metric2Copy(Metric2):
 
             def init_copy(self, connection):
-                query = "TRUNCATE {0}".format(self.table)
+                query = f"TRUNCATE {self.table}"
                 connection.cursor().execute(query)
 
         clearer = Metric2Copy(21)
         conn = clearer.output().connect()
         conn.autocommit = True
-        conn.cursor().execute('DROP TABLE IF EXISTS {table}'.format(table=clearer.table))
-        conn.cursor().execute('DROP TABLE IF EXISTS {marker_table}'.format(marker_table=postgres.PostgresTarget.marker_table))
+        conn.cursor().execute(f'DROP TABLE IF EXISTS {clearer.table}')
+        conn.cursor().execute(f'DROP TABLE IF EXISTS {postgres.PostgresTarget.marker_table}')
 
         luigi.build([Metric1(0), Metric1(1)], local_scheduler=True)
         luigi.build([clearer], local_scheduler=True)
         cursor = conn.cursor()
-        cursor.execute('select count(*) from {table}'.format(table=clearer.table))
+        cursor.execute(f'select count(*) from {clearer.table}')
         self.assertEqual(tuple(cursor), ((3,),))

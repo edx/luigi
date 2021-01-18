@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -24,7 +23,7 @@ import pickle
 
 import helpers
 import luigi
-import mock
+from unittest import mock
 import luigi.format
 from luigi.contrib import hdfs
 from luigi import six
@@ -228,7 +227,7 @@ class AtomicHdfsOutputPipeTests(MiniClusterTestCase):
 class HdfsAtomicWriteDirPipeTests(MiniClusterTestCase):
 
     def setUp(self):
-        super(HdfsAtomicWriteDirPipeTests, self).setUp()
+        super().setUp()
         self.path = self._test_file()
         if self.fs.exists(self.path):
             self.fs.remove(self.path, skip_trash=True)
@@ -305,11 +304,11 @@ class HdfsAtomicWriteDirPipeTests(MiniClusterTestCase):
 
 # This class is a mixin, and does not inherit from TestCase, in order to avoid running the base class as a test case.
 @attr('minicluster')
-class _HdfsFormatTest(object):
+class _HdfsFormatTest:
     format = None  # override with luigi.format.Format subclass
 
     def setUp(self):
-        super(_HdfsFormatTest, self).setUp()
+        super().setUp()
         self.target = hdfs.HdfsTarget(self._test_file(), format=self.format)
         if self.target.exists():
             self.target.remove(skip_trash=True)
@@ -361,20 +360,20 @@ class ComplexOldFormatTest(MiniClusterTestCase):
     format = ComplexOldFormat()
 
     def setUp(self):
-        super(ComplexOldFormatTest, self).setUp()
+        super().setUp()
         self.target = hdfs.HdfsTarget(self._test_file(), format=self.format)
         if self.target.exists():
             self.target.remove(skip_trash=True)
 
     def test_with_write_success(self):
         with self.target.open('w') as fobj:
-            fobj.write(u'foo')
+            fobj.write('foo')
         self.assertTrue(self.target.exists())
 
         with self.target.open('r') as fobj:
             a = fobj.read()
 
-        self.assertFalse(isinstance(a, six.text_type))
+        self.assertFalse(isinstance(a, str))
         self.assertEqual(a, b'foo')
 
 
@@ -501,7 +500,7 @@ class HdfsTargetTestMixin(FileSystemTargetTestMixin):
 
     def assertRegexpMatches(self, text, expected_regexp, msg=None):
         """Python 2.7 backport."""
-        if isinstance(expected_regexp, six.string_types):
+        if isinstance(expected_regexp, str):
             expected_regexp = re.compile(expected_regexp)
         if not expected_regexp.search(text):
             msg = msg or "Regexp didn't match"
@@ -532,22 +531,22 @@ class HdfsTargetTestMixin(FileSystemTargetTestMixin):
         res9 = hdfs.tmppath(path9, include_unix_username=False)
 
         # Then: I should get correct results relative to Luigi temporary directory
-        self.assertRegexpMatches(res1, "^/tmp/dir1/dir2/file-luigitemp-\d+")
+        self.assertRegexpMatches(res1, r"^/tmp/dir1/dir2/file-luigitemp-\d+")
         # it would be better to see hdfs:///path instead of hdfs:/path, but single slash also works well
-        self.assertRegexpMatches(res2, "^hdfs:/tmp/dir1/dir2/file-luigitemp-\d+")
-        self.assertRegexpMatches(res3, "^hdfs://somehost/tmp/dir1/dir2/file-luigitemp-\d+")
-        self.assertRegexpMatches(res4, "^file:///tmp/dir1/dir2/file-luigitemp-\d+")
-        self.assertRegexpMatches(res5, "^/tmp/dir/file-luigitemp-\d+")
+        self.assertRegexpMatches(res2, r"^hdfs:/tmp/dir1/dir2/file-luigitemp-\d+")
+        self.assertRegexpMatches(res3, r"^hdfs://somehost/tmp/dir1/dir2/file-luigitemp-\d+")
+        self.assertRegexpMatches(res4, r"^file:///tmp/dir1/dir2/file-luigitemp-\d+")
+        self.assertRegexpMatches(res5, r"^/tmp/dir/file-luigitemp-\d+")
         # known issue with duplicated "tmp" if schema is present
-        self.assertRegexpMatches(res6, "^file:///tmp/tmp/dir/file-luigitemp-\d+")
+        self.assertRegexpMatches(res6, r"^file:///tmp/tmp/dir/file-luigitemp-\d+")
         # known issue with duplicated "tmp" if schema is present
-        self.assertRegexpMatches(res7, "^hdfs://somehost/tmp/tmp/dir/file-luigitemp-\d+")
-        self.assertRegexpMatches(res8, "^/tmp/luigitemp-\d+")
+        self.assertRegexpMatches(res7, r"^hdfs://somehost/tmp/tmp/dir/file-luigitemp-\d+")
+        self.assertRegexpMatches(res8, r"^/tmp/luigitemp-\d+")
         self.assertRegexpMatches(res9, "/tmp/tmpdir/file")
 
     def test_tmppath_username(self):
         self.assertRegexpMatches(hdfs.tmppath('/path/to/stuff', include_unix_username=True),
-                                 "^/tmp/[a-z0-9_]+/path/to/stuff-luigitemp-\d+")
+                                 r"^/tmp/[a-z0-9_]+/path/to/stuff-luigitemp-\d+")
 
     def test_pickle(self):
         t = hdfs.HdfsTarget("/tmp/dir")
@@ -849,7 +848,7 @@ class SnakebiteConfigTest(unittest.TestCase):
         self.assertEqual(hdfs.config.hdfs().snakebite_autoconfig, True)
 
 
-class _MiscOperationsMixin(object):
+class _MiscOperationsMixin:
 
     # TODO: chown/chmod/count should really be methods on HdfsTarget rather than the client!
 
@@ -884,7 +883,6 @@ class TestCliMisc(MiniClusterTestCase, _MiscOperationsMixin):
 @attr('minicluster')
 class TestSnakebiteMisc(MiniClusterTestCase, _MiscOperationsMixin):
     def get_client(self):
-        if six.PY3:
-            raise unittest.SkipTest("snakebite doesn't work on Python yet.")
+        raise unittest.SkipTest("snakebite doesn't work on Python yet.")
 
         return luigi.contrib.hdfs.SnakebiteHdfsClient()

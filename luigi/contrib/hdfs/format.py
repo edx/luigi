@@ -16,7 +16,7 @@ class HdfsAtomicWriteError(IOError):
 class HdfsReadPipe(luigi.format.InputPipeProcessWrapper):
 
     def __init__(self, path):
-        super(HdfsReadPipe, self).__init__(load_hadoop_cmd() + ['fs', '-cat', path])
+        super().__init__(load_hadoop_cmd() + ['fs', '-cat', path])
 
 
 class HdfsAtomicWritePipe(luigi.format.OutputPipeProcessWrapper):
@@ -37,22 +37,22 @@ class HdfsAtomicWritePipe(luigi.format.OutputPipeProcessWrapper):
         self.tmppath = hdfs_config.tmppath(self.path)
         parent_dir = os.path.dirname(self.tmppath)
         mkdir(parent_dir, parents=True, raise_if_exists=False)
-        super(HdfsAtomicWritePipe, self).__init__(load_hadoop_cmd() + ['fs', '-put', '-', self.tmppath])
+        super().__init__(load_hadoop_cmd() + ['fs', '-put', '-', self.tmppath])
 
     def abort(self):
         logger.info("Aborting %s('%s'). Removing temporary file '%s'",
                     self.__class__.__name__, self.path, self.tmppath)
-        super(HdfsAtomicWritePipe, self).abort()
+        super().abort()
         remove(self.tmppath, skip_trash=True)
 
     def close(self):
-        super(HdfsAtomicWritePipe, self).close()
+        super().close()
         try:
             remove(self.path)
         except HDFSCliError:
             pass
         if not all(result['result'] for result in rename(self.tmppath, self.path) or []):
-            raise HdfsAtomicWriteError('Atomic write to {} failed'.format(self.path))
+            raise HdfsAtomicWriteError(f'Atomic write to {self.path} failed')
 
 
 class HdfsAtomicWriteDirPipe(luigi.format.OutputPipeProcessWrapper):
@@ -64,16 +64,16 @@ class HdfsAtomicWriteDirPipe(luigi.format.OutputPipeProcessWrapper):
         self.path = path
         self.tmppath = hdfs_config.tmppath(self.path)
         self.datapath = self.tmppath + ("/data%s" % data_extension)
-        super(HdfsAtomicWriteDirPipe, self).__init__(load_hadoop_cmd() + ['fs', '-put', '-', self.datapath])
+        super().__init__(load_hadoop_cmd() + ['fs', '-put', '-', self.datapath])
 
     def abort(self):
         logger.info("Aborting %s('%s'). Removing temporary dir '%s'",
                     self.__class__.__name__, self.path, self.tmppath)
-        super(HdfsAtomicWriteDirPipe, self).abort()
+        super().abort()
         remove(self.tmppath, skip_trash=True)
 
     def close(self):
-        super(HdfsAtomicWriteDirPipe, self).close()
+        super().close()
         try:
             remove(self.path)
         except HDFSCliError:
@@ -81,11 +81,11 @@ class HdfsAtomicWriteDirPipe(luigi.format.OutputPipeProcessWrapper):
 
         # it's unlikely to fail in this way but better safe than sorry
         if not all(result['result'] for result in rename(self.tmppath, self.path) or []):
-            raise HdfsAtomicWriteError('Atomic write to {} failed'.format(self.path))
+            raise HdfsAtomicWriteError(f'Atomic write to {self.path} failed')
 
         if os.path.basename(self.tmppath) in map(os.path.basename, listdir(self.path)):
             remove(self.path)
-            raise HdfsAtomicWriteError('Atomic write to {} failed'.format(self.path))
+            raise HdfsAtomicWriteError(f'Atomic write to {self.path} failed')
 
 
 class PlainFormat(luigi.format.Format):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -51,7 +50,7 @@ class LuigiConfigParser(ConfigParser):
     if 'LUIGI_CONFIG_PATH' in os.environ:
         config_file = os.environ['LUIGI_CONFIG_PATH']
         if not os.path.isfile(config_file):
-            warnings.warn("LUIGI_CONFIG_PATH points to a file which does not exist. Invalid file: {path}".format(path=config_file))
+            warnings.warn(f"LUIGI_CONFIG_PATH points to a file which does not exist. Invalid file: {config_file}")
         else:
             _config_paths.append(config_file)
 
@@ -76,7 +75,7 @@ class LuigiConfigParser(ConfigParser):
         deprecated_paths = [p for p in cls._config_paths if os.path.basename(p) == 'client.cfg' and os.path.exists(p)]
         if deprecated_paths:
             warnings.warn("Luigi configuration files named 'client.cfg' are deprecated if favor of 'luigi.cfg'. " +
-                          "Found: {paths!r}".format(paths=deprecated_paths),
+                          f"Found: {deprecated_paths!r}",
                           DeprecationWarning)
 
         return cls.instance().read(cls._config_paths)
@@ -113,7 +112,7 @@ class LuigiConfigParser(ConfigParser):
 
     def getintdict(self, section):
         try:
-            return dict((key, int(value)) for key, value in self.items(section))
+            return {key: int(value) for key, value in self.items(section)}
         except NoSectionError:
             return {}
 

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -22,7 +21,7 @@ import pickle
 import time
 from helpers import unittest
 
-import mock
+from unittest import mock
 import psutil
 
 import luigi
@@ -132,7 +131,7 @@ class ParallelSchedulingTest(unittest.TestCase):
     def test_multiprocess_scheduling_with_overlapping_dependencies(self):
         self.w.add(OverlappingSelfDependenciesTask(5, 2), True)
         self.assertEqual(15, self.sch.add_task.call_count)
-        self.assertEqual(set((
+        self.assertEqual({
             OverlappingSelfDependenciesTask(n=1, k=1).task_id,
             OverlappingSelfDependenciesTask(n=2, k=1).task_id,
             OverlappingSelfDependenciesTask(n=2, k=2).task_id,
@@ -141,8 +140,8 @@ class ParallelSchedulingTest(unittest.TestCase):
             OverlappingSelfDependenciesTask(n=4, k=1).task_id,
             OverlappingSelfDependenciesTask(n=4, k=2).task_id,
             OverlappingSelfDependenciesTask(n=5, k=2).task_id,
-        )), set(self.added_tasks('PENDING')))
-        self.assertEqual(set((
+        }, set(self.added_tasks('PENDING')))
+        self.assertEqual({
             OverlappingSelfDependenciesTask(n=0, k=0).task_id,
             OverlappingSelfDependenciesTask(n=0, k=1).task_id,
             OverlappingSelfDependenciesTask(n=1, k=0).task_id,
@@ -150,7 +149,7 @@ class ParallelSchedulingTest(unittest.TestCase):
             OverlappingSelfDependenciesTask(n=2, k=0).task_id,
             OverlappingSelfDependenciesTask(n=3, k=0).task_id,
             OverlappingSelfDependenciesTask(n=4, k=0).task_id,
-        )), set(self.added_tasks('DONE')))
+        }, set(self.added_tasks('DONE')))
 
     @mock.patch('luigi.notifications.send_error_email')
     def test_raise_exception_in_complete(self, send):

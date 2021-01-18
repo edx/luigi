@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # Copyright 2012-2015 Spotify AB
 #
@@ -14,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from __future__ import print_function
 
 from helpers import unittest
 
@@ -47,10 +45,10 @@ class MockFileTest(unittest.TestCase):
     def test_unicode(self):
         t = MockTarget("foo")
         with t.open('w') as b:
-            b.write(u"bar")
+            b.write("bar")
 
         with t.open('r') as b:
-            self.assertEqual(b.read(), u'bar')
+            self.assertEqual(b.read(), 'bar')
 
 
 class MockFileSystemTest(unittest.TestCase):
@@ -99,8 +97,5 @@ class TestImportMockFile(unittest.TestCase):
 
     def test_mockfile(self):
         from luigi.mock import MockFile
-        if six.PY3:
-            with self.assertWarnsRegex(DeprecationWarning, r'MockFile has been renamed MockTarget'):
-                self.assertTrue(isinstance(MockFile('foo'), MockTarget))
-        else:
+        with self.assertWarnsRegex(DeprecationWarning, r'MockFile has been renamed MockTarget'):
             self.assertTrue(isinstance(MockFile('foo'), MockTarget))
